@@ -79,3 +79,15 @@ async def simulation_stream_endpoint(websocket: WebSocket):
             
     except WebSocketDisconnect:
         logger.warning("Crucible Edge link disconnected.")
+# Inject this logic check inside the websocket loop immediately before sending data to the edge client:
+if stress_index > 85:
+    from services.streaming.social_webhook import SocialAutomationHook
+    hook = SocialAutomationHook()
+    # Trigger non-blocking asynchronous fire-and-forget task background routine to preserve sub-100ms response timelines
+    asyncio.create_task(hook.broadcast_failed_challenge(
+        user_name=packet.user_id, 
+        headline="Operational Grid Disruption", 
+        score=100 - stress_index, 
+        vertical=packet.vertical
+    ))
+    
