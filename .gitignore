@@ -1,6 +1,24 @@
-*.i
-*.ii
-*.gpu
-*.ptx
-*.cubin
-*.fatbin
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+*.env
+config/pipeline_config.env
+.venv
+venv/
+ENV/
+
+# Database files & Local Volatile Volumes
+pgdata/
+*.db
+*.sqlite
+
+# OS and IDE files
+.DS_Store
+.idea/
+.vscode/
+*.suo
+*.ntvs*
