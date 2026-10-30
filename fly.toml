@@ -1,5 +1,5 @@
 app = "mrg-simulation-grid"
-primary_region = "atl"
+primary_region = "dfw"
 
 [build]
   dockerfile = "Dockerfile"
