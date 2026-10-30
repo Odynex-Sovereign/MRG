@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: mrg_postgres
+    environment:
+      POSTGRES_USER: mrg_admin
+      POSTGRES_PASSWORD: mrg_secure_password_2026
+      POSTGRES_DB: mrg_simulation_grid
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mrg_admin -d mrg_simulation_grid"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mrg-core-engine:
+    build: .
+    container_name: mrg_core_engine
+    environment:
+      - DATABASE_URL=postgresql://mrg_admin:mrg_secure_password_2026@postgres-db:5432/mrg_simulation_grid
+      - NVIDIA_NIM_API_KEY=${NVIDIA_NIM_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - LIVEPEER_API_KEY=${LIVEPEER_API_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
