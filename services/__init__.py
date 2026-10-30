@@ -6,3 +6,8 @@ from services.streaming.websocket_pipeline import app
 # Include explicit REST endpoints into the global FastAPI micro-VM context
 app.include_router(auth_router)
 app.include_router(api_keys_router)
+# Append directly to your services/__init__.py script configuration
+from services.auth.billing import router as billing_router
+
+# Inject into the global FastAPI application initialization framework
+app.include_router(billing_router)
