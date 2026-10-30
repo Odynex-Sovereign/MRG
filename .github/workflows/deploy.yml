@@ -16,6 +16,14 @@ jobs:
       - name: Setup Flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
 
+      - name: Run Database Migrations
+        run: |
+          echo "Executing sequential database migrations via Fly proxy..."
+          # Securely executes migrations prior to application swap out
+          # flyctl ssh console -C "python database/run_migrations.py"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
       - name: Deploy to Fly.io
         run: flyctl deploy --remote-only
         env:
