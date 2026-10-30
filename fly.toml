@@ -37,3 +37,11 @@ primary_region = "atl"
     type = "connections"
     hard_limit = 1000
     soft_limit = 800
+[[http_service.checks]]
+  grace_period = "45s"  # Increase from 15s to give the DB pool time to open
+  interval = "20s"
+  method = "GET"
+  path = "/healthz"
+  protocol = "http"
+  timeout = "5s"
+  
