@@ -1,14 +1,23 @@
-import asyncio
+import httpx
+from api_keys import NVIDIA_NIM_API_KEY, IS_SANDBOX
 
-class RivaTTSBroker:
-    def __init__(self):
-        self.voice_name = "en-US-Neural-Vance"
+RIVA_URI = "https://nvidia.com"
 
-    async def synthesize_stream(self, text_content: str) -> bytes:
-        """
-        Converts text tokens into ultra-high-fidelity streaming PCM audio 
-        mimicking vocal stress characteristics under high-pressure scenarios.
-        """
-        await asyncio.sleep(0.015) # Simulated pipeline synthesis execution gap
-        # Returns raw chunk header placeholders mimicking high-fidelity PCM streaming buffers
-        return b"\x00\x01\x02\x03_mrg_riva_encoded_pcm_stream_placeholder"
+async def synthesize_speech_stream(text: str) -> bytes:
+    if IS_SANDBOX:
+        return b"MOCK_WAV_AUDIO_STREAM_DATA"
+        
+    headers = {
+        "Authorization": f"Bearer {NVIDIA_NIM_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "input": text,
+        "voice": "English-US.Female-1",
+        "encoding": "WAV"
+    }
+    
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        response = await client.post(RIVA_URI, json=payload, headers=headers)
+        response.raise_for_status()
+        return response.content
