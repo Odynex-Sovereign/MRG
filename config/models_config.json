@@ -1,0 +1,20 @@
+{
+  "macro_engine": {
+    "primary_provider": "deepseek",
+    "model_name": "deepseek-v3",
+    "fallback_model": "llama-3-405b",
+    "max_tokens": 1024,
+    "temperature": 0.3
+  },
+  "micro_tactical": {
+    "provider": "nvidia_nim",
+    "model_name": "nemotron-4-340b-instruct",
+    "timeout_ms": 1500,
+    "concurrency_limit": 500
+  },
+  "sensory_stack": {
+    "riva_tts_voice": "en-US-Neural-Vance",
+    "audio2face_mesh_profile": "openusd_avatar_v2",
+    "target_streaming_latency_ms": 100
+  }
+}
