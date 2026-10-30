@@ -46,7 +46,8 @@ async def simulation_stream_endpoint(websocket: WebSocket):
             pitch_var = packet.vocal_pitch_variance
             energy = packet.vocal_energy
             stress_index = min(
-                100, int((pitch_var * 1.5) + (energy * 0.8) + (packet.response_latency_ms / 50))
+                100,
+                int((pitch_var * 1.5) + (energy * 0.8) + (packet.response_latency_ms / 50)),
             )
 
             payload_out = {
@@ -67,25 +68,21 @@ async def simulation_stream_endpoint(websocket: WebSocket):
             }
 
             if packet.vertical == "Higher-Ed":
-                payload_out["telemetry"].update(
-                    {
-                        "peer_pressure_resistance": max(0, 100 - int(stress_index * 1.1)),
-                        "rhetorical_defense_rating": min(
-                            100,
-                            int((packet.response_latency_ms / 40) + (energy * 0.9)),
-                        ),
-                    }
-                )
+                payload_out["telemetry"].update({
+                    "peer_pressure_resistance": max(0, 100 - int(stress_index * 1.1)),
+                    "rhetorical_defense_rating": min(
+                        100,
+                        int((packet.response_latency_ms / 40) + (energy * 0.9)),
+                    ),
+                })
                 payload_out["nvidia_audio2face_trigger"]["expression_profile"] = "skeptical_brow_raise"
 
             elif packet.vertical == "Asset-Defense":
-                payload_out["telemetry"].update(
-                    {
-                        "tutsa_preemption_compliance": max(0, 100 - int(stress_index * 0.5)),
-                        "prior_art_validation_score": min(100, int(90 + (energy * 0.2))),
-                        "generational_continuity_index": int(100 - (packet.response_latency_ms / 100)),
-                    }
-                )
+                payload_out["telemetry"].update({
+                    "tutsa_preemption_compliance": max(0, 100 - int(stress_index * 0.5)),
+                    "prior_art_validation_score": min(100, int(90 + (energy * 0.2))),
+                    "generational_continuity_index": int(100 - (packet.response_latency_ms / 100)),
+                })
                 payload_out["nvidia_audio2face_trigger"]["expression_profile"] = "calculated_protective"
 
             if stress_index > 85:
