@@ -1,0 +1,10 @@
+{
+  "avatar_profile": "openusd_avatar_v2",
+  "mesh_skeleton_type": "nvidia_digital_human_base",
+  "default_expression": "calculated_neutral",
+  "blendshape_overrides": {
+    "eyeBlinkLeft": 1.0,
+    "eyeBlinkRight": 1.0,
+    "jawOpen": 1.0
+  }
+}
