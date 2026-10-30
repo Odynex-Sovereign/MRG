@@ -4,6 +4,11 @@ primary_region = "atl"
 [build]
   dockerfile = "Dockerfile"
 
+[env]
+  ENVIRONMENT = "production"
+  CORE_STRATEGY_ENGINE = "ODYNEX_AXIS_LOGISTICS"
+  LEGAL_PROTECTION_FRAMEWORK = "TUTSA_WTO_COMPLIANT"
+
 [http_service]
   internal_port = 8000
   force_https = true
@@ -13,12 +18,12 @@ primary_region = "atl"
   processes = ["app"]
 
 [[http_service.checks]]
-  grace_period = "10s"
-  interval = "15s"
+  grace_period = "15s"
+  interval = "20s"
   method = "GET"
   path = "/healthz"
   protocol = "http"
-  timeout = "2s"
+  timeout = "3s"
 
 [[services]]
   protocol = "tcp"
@@ -28,8 +33,7 @@ primary_region = "atl"
     port = 443
     handlers = ["tls", "http"]
 
-  # Enable long-lived TCP connections optimized for streaming WebSockets
   [services.concurrency]
     type = "connections"
     hard_limit = 1000
-    soft_limit= 800
+    soft_limit = 800
