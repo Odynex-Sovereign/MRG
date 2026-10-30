@@ -101,8 +101,8 @@ async def simulation_stream_endpoint(websocket: WebSocket):
                             vertical=packet.vertical,
                         )
                     )
-                except Exception as e:
-                    logger.debug("Social hook skipped: %s", e)
+                except Exception:
+                    logger.debug("Social hook skipped", exc_info=True)
 
             await websocket.send_text(json.dumps(payload_out))
 
