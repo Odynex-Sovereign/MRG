@@ -1,25 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, EmailStr
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from db_client import get_db
+from deepseek_client import generate_macro_ripple
 
-router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+router = APIRouter()
 
-class UserRegister(BaseModel):
-    email: EmailStr
-    full_name: str
-    password: str
-    department_vertical: str
+@router.get("/healthz")
+async def health_check():
+    return {"status": "healthy", "engine": "MRG Planet-Scale Grid"}
 
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
-
-@router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register_operator(user: UserRegister):
-    # Enforces account generation validation checks
-    return {"message": "Account created successfully.", "email": user.email, "role": "operator"}
-
-@router.post("/login")
-async def login_operator(credentials: UserLogin):
-    if credentials.email == "admin@odynex.axis" and credentials.password == "secure":
-        return {"access_token": "mrg_token_secret_payload", "token_type": "bearer", "role": "architect"}
-    raise HTTPException(status_code=401, detail="Invalid credential records.")
+@router.post("/simulate/macro")
+async def trigger_macro_simulation(prompt: str, db: Session = Depends(get_db)):
+    ripple_effect = await generate_macro_ripple(prompt)
+    return {"success": True, "analysis": ripple_effect}
