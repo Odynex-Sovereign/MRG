@@ -1,13 +1,8 @@
-app = "mrg-simulation-grid"
+app = "mrg"
 primary_region = "dfw"
 
 [build]
   dockerfile = "Dockerfile"
-
-[env]
-  ENVIRONMENT = "production"
-  CORE_STRATEGY_ENGINE = "ODYNEX_AXIS_LOGISTICS"
-  LEGAL_PROTECTION_FRAMEWORK = "TUTSA_WTO_COMPLIANT"
 
 [http_service]
   internal_port = 8000
@@ -17,17 +12,19 @@ primary_region = "dfw"
   min_machines_running = 1
   processes = ["app"]
 
-[[http_service.checks]]
-  grace_period = "15s"
-  interval = "20s"
-  method = "GET"
-  path = "/healthz"
-  protocol = "http"
-  timeout = "3s"
+[[vm]]
+  memory = "2gb"
+  cpu_kind = "shared"
+  cpus = 2
 
 [[services]]
   protocol = "tcp"
   internal_port = 8000
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
 
   [[services.ports]]
     port = 443
@@ -35,13 +32,13 @@ primary_region = "dfw"
 
   [services.concurrency]
     type = "connections"
-    hard_limit = 1000
-    soft_limit = 800
-[[http_service.checks]]
-  grace_period = "45s"  # Increase from 15s to give the DB pool time to open
-  interval = "20s"
-  method = "GET"
-  path = "/healthz"
-  protocol = "http"
-  timeout = "5s"
-  
+    hard_limit = 100
+    soft_limit = 80
+
+  [[services.http_checks]]
+    interval = "10s"
+    timeout = "2s"
+    method = "GET"
+    path = "/healthz"
+    protocol = "http"
+    grace_period = "5s"
