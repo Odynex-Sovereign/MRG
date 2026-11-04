@@ -14,5 +14,6 @@ COPY . .
 
 EXPOSE 8000
 
-# Fix: Adjust path assumption to point to the base directory module resolution wrapper
-CMD ["uvicorn", "websocket_pipeline:app", "--host", "0.0.0.0", "--port", "8000"]
+# Force Python to map the root directory as an active package domain
+ENV PYTHONPATH=/app
+CMD ["uvicorn", "services.streaming.websocket_pipeline:app", "--host", "0.0.0.0", "--port", "8000"]
