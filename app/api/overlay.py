@@ -120,3 +120,33 @@ async def launch_complete_passive_marketing_and_yield_mesh():
     asyncio.create_task(syndicator.start_autonomous_marketing_loop())
     
     logger.info("[MRG Cluster] Version 45 assembly complete. Infrastructure hunting loops actively deployed.")
+import os
+from fastapi import FastAPI, HTTPException
+from services.staging_analytics import StagingAnalyticsEngine
+
+app = FastAPI(title="MRG Autonomous Planet-Scale Grid Suite")
+
+# Initialize the global staging metrics engine interface
+STAGING_DB_URL = os.getenv("STAGING_DATABASE_URL", "postgresql://postgres:pass@localhost:5432/mrg_staging")
+staging_analytics_engine = StagingAnalyticsEngine(database_url=STAGING_DB_URL)
+
+@app.on_event("startup")
+async def launch_high_frequency_analytics_and_vocal_mesh():
+    # 1. Initialize the live staging connection pool for dashboard visualization
+    await staging_analytics_engine.initialize_pool()
+    
+    # 2. Wire standard background loops cleanly
+    logger.info("[MRG Cluster] Version 46 staging database tracking arrays and calibrated industrial acoustics are live.")
+
+@app.get("/api/analytics/live-staging-data")
+async def get_live_dashboard_telemetry():
+    """Exposes an endpoint for your interactive widgets to fetch live staging database fields."""
+    try:
+        metrics = await staging_analytics_engine.fetch_real_time_metrics()
+        return metrics
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analytics telemetry pull failure: {str(e)}")
+
+@app.on_event("shutdown")
+async def teardown_cluster_connections():
+    await staging_analytics_engine.close_pool()
