@@ -90,3 +90,33 @@ async def initialize_autonomous_marketing():
     # Fire the loop as a background task completely separate from standard web traffic threads
     asyncio.create_task(syndicator.start_autonomous_marketing_loop())
     logger.info("[MRG Cluster] Version 45 high-impact marketing syndication loops are live.")
+from fastapi import FastAPI, Depends
+import asyncio
+import logging
+from services.social_syndicator import AutonomousSocialSyndicator
+from services.marketing_router import MarketingWebhookRouter
+
+logger = logging.getLogger("mrg.app")
+
+# Initialize your core unified framework application instance
+app = FastAPI(title="MRG Autonomous Planet-Scale Grid Suite")
+
+@app.on_event("startup")
+async def launch_complete_passive_marketing_and_yield_mesh():
+    """
+    Fires all high-frequency automated components at server boot.
+    Orchestrates the client acquisition, financial routing, and yield loops across 10 machines.
+    """
+    logger.info("[MRG Cluster] Initializing complete Version 45 multi-angle infrastructure mesh...")
+    
+    # 1. Instantiate the outbound webhook delivery channel
+    marketing_router = MarketingWebhookRouter()
+    
+    # 2. Boot up the autonomous social syndication loop to broadcast milestones
+    syndicator = AutonomousSocialSyndicator(
+        db_client=db_client, # Points to your active asyncpg connection pool
+        comms_orchestrator=marketing_router # Interconnects the content loop with the delivery channel
+    )
+    asyncio.create_task(syndicator.start_autonomous_marketing_loop())
+    
+    logger.info("[MRG Cluster] Version 45 assembly complete. Infrastructure hunting loops actively deployed.")
