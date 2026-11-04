@@ -177,3 +177,34 @@ function selectProfileTier(tierKey) {
     alert("Configuring workflow parameters for profile: " + tierKey);
 }
 </script>
+<!-- Secure Stripe Checkout Integration Vector -->
+<script src="https://stripe.com"></script>
+
+<script>
+// Initialize Stripe securely at the client edge using your production public token
+const stripePublicKey = "pk_live_51T37dxR9bpZJwHWsqGo7gxf02HR8hXb7091RlkVkEPcPby0NlwyuiWHPMt633153IWdupQgIL58UcnsXdNk8B1oS009RrnYPDi";
+const stripe = Stripe(stripePublicKey);
+
+async function initializeSecureCheckoutSession(tierPriceId, clientId) {
+    console.log(`📡 Opening multi-channel payment gateway for tier: ${tierPriceId}`);
+    
+    try {
+        const response = await fetch('/api/checkout/create-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ price_id: tierPriceId, client_id: clientId })
+        });
+        
+        const session = await response.json();
+        
+        // Redirect client browser smoothly to Stripe's secure cloud processing forms
+        const result = await stripe.redirectToCheckout({ sessionId: session.id });
+        
+        if (result.error) {
+            alert(`Payment Gateway Friction: ${result.error.message}`);
+        }
+    } catch (err) {
+        console.error("❌ Checkout handshake loop interrupted:", err);
+    }
+}
+</script>
