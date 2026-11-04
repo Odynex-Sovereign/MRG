@@ -1,30 +1,59 @@
-import os
-import asyncio
-import glob
-import asyncpg
+#!/usr/bin/env python3
+"""Apply SQL migrations in order."""
 
-async def run_ordered_migrations():
-    db_url = os.getenv("DATABASE_URL")
-    if not db_url:
-        print("DATABASE_URL missing. Skipping migration automation.")
+from __future__ import annotations
+
+import asyncio
+import os
+import sys
+from pathlib import Path
+
+MIGRATIONS_DIR = Path(__file__).parent / "migrations"
+
+
+async def run() -> None:
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        print("DATABASE_URL not set — skipping migrations (sandbox mode).")
         return
 
-    print("Connecting to target database cluster...")
-    conn = await asyncpg.connect(db_url)
-    
     try:
-        # Collect and run all migration scripts sequentially
-        migration_files = sorted(glob.glob("database/migrations/*.sql"))
-        for file_path in migration_files:
-            print(f"Applying migration sequence: {file_path}")
-            with open(file_path, "r") as f:
-                sql_script = f.read()
-            await conn.execute(sql_script)
-        print("Successfully synced all database schemas.")
-    except Exception as e:
-        print(f"Migration script error encountered: {e}")
+        import asyncpg
+    except ImportError:
+        print("asyncpg not installed", file=sys.stderr)
+        sys.exit(1)
+
+    pool = await asyncpg.create_pool(database_url, min_size=1, max_size=2)
+    try:
+        async with pool.acquire() as conn:
+            await conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS schema_migrations (
+                    filename TEXT PRIMARY KEY,
+                    applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+                """
+            )
+            applied = {
+                row["filename"]
+                for row in await conn.fetch("SELECT filename FROM schema_migrations")
+            }
+            files = sorted(MIGRATIONS_DIR.glob("*.sql"))
+            for path in files:
+                if path.name in applied:
+                    print(f"skip {path.name}")
+                    continue
+                sql = path.read_text(encoding="utf-8")
+                async with conn.transaction():
+                    await conn.execute(sql)
+                    await conn.execute(
+                        "INSERT INTO schema_migrations (filename) VALUES ($1)",
+                        path.name,
+                    )
+                print(f"applied {path.name}")
     finally:
-        await conn.close()
+        await pool.close()
+
 
 if __name__ == "__main__":
-    asyncio.run(run_ordered_migrations())
+    asyncio.run(run())

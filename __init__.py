@@ -1,4 +1,3 @@
-from services.sensory.audio2face_rpc import Audio2FaceRPCClient
-from services.sensory.riva_tts import RivaTTSBroker
+from services.streaming.livepeer_distributor import LivepeerDistributor
 
-__all__ = ["Audio2FaceRPCClient", "RivaTTSBroker"]
+__all__ = ["LivepeerDistributor"]

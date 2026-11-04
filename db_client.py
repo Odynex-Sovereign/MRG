@@ -1,86 +1,36 @@
-import os
+"""Database helpers for optional Postgres integration."""
 
-import psycopg2
-from psycopg2.extras import RealDictCursor
+from __future__ import annotations
+
+import os
+from collections.abc import AsyncIterator
+from typing import Any
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 
-def get_db_connection():
-    """Connect only when a database is configured; sandbox mode needs no DB."""
+async def get_db_pool():
+    """Create an asyncpg pool. Raises if DATABASE_URL missing."""
     if not DATABASE_URL:
-        return None
+        raise RuntimeError("DATABASE_URL is not configured")
+    import asyncpg
 
-    try:
-        return psycopg2.connect(
-            DATABASE_URL,
-            cursor_factory=RealDictCursor,
-            connect_timeout=3,
-        )
-    except psycopg2.Error as exc:
-        print(f"Database connection unavailable: {exc}")
-        return None
-
-
-def init_base_tables():
-    commands = (
-        """
-        CREATE TABLE IF NOT EXISTS simulation_sessions (
-            session_id VARCHAR(255) PRIMARY KEY,
-            vertical VARCHAR(100) NOT NULL,
-            composure_baseline NUMERIC(5,2) DEFAULT 100.00,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS billing_subscriptions (
-            subscription_id SERIAL PRIMARY KEY,
-            session_id VARCHAR(255) REFERENCES simulation_sessions(session_id) ON DELETE CASCADE,
-            platform_tier VARCHAR(100) NOT NULL,
-            pricing_architecture VARCHAR(255) NOT NULL,
-            billing_value NUMERIC(12,2) NOT NULL,
-            target_margin_pct NUMERIC(4,1) NOT NULL,
-            is_active BOOLEAN DEFAULT TRUE,
-            activated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS telemetry_logs (
-            log_id SERIAL PRIMARY KEY,
-            session_id VARCHAR(255) REFERENCES simulation_sessions(session_id) ON DELETE CASCADE,
-            vocal_stress NUMERIC(5,4),
-            decision_velocity NUMERIC(7,2),
-            logged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """,
+    return await asyncpg.create_pool(
+        DATABASE_URL,
+        min_size=int(os.getenv("DB_POOL_MIN_SIZE", "2")),
+        max_size=int(os.getenv("DB_POOL_MAX_SIZE", "10")),
+        command_timeout=float(os.getenv("DB_COMMAND_TIMEOUT", "5.0")),
     )
-    conn = get_db_connection()
-    if conn is None:
-        print("Database is not configured or unavailable; skipping schema initialization.")
+
+
+async def get_db() -> AsyncIterator[Any]:
+    """FastAPI dependency — yields None when no database is configured."""
+    if not DATABASE_URL:
+        yield None
         return
-
+    pool = await get_db_pool()
     try:
-        with conn.cursor() as cur:
-            for command in commands:
-                cur.execute(command)
-        conn.commit()
-        print("Successfully executed base and billing subscription migrations.")
-    except psycopg2.Error as exc:
-        conn.rollback()
-        print(f"Failed to execute schema layout: {exc}")
+        async with pool.acquire() as conn:
+            yield conn
     finally:
-        conn.close()
-
-
-def get_db():
-    """Yield a database connection when configured, otherwise None for sandbox mode."""
-    conn = get_db_connection()
-    try:
-        yield conn
-    finally:
-        if conn is not None:
-            conn.close()
-
-
-if __name__ == "__main__":
-    init_base_tables()
+        await pool.close()

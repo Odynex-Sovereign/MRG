@@ -1,67 +1,51 @@
-import os
 import httpx
-from typing import Dict, Any, Union
+from fastapi import HTTPException
 
-class DeepSeekOrchestrator:
+
+class DeepSeekMacroClient:
     def __init__(self):
+        import os
+
         self.api_key = os.getenv("DEEPSEEK_API_KEY")
-        # Official OpenAI-compatible endpoint
         self.endpoint = "https://api.deepseek.com"
 
-    async def generate_crisis_step(self, sector: str, current_state: str) -> Dict[str, Any]:
+    async def calculate_systemic_ripple(self, payload_text: str, current_state: dict) -> dict:
         if not self.api_key:
-            return {
-                "cascade_summary": "[SANDBOX MODE] API Key missing. Systemic degradation simulated.",
-                "sensory_telemetry": {
-                    "haptic_frequency": 45.0,
-                    "haptic_intensity": 0.3,
-                    "scent_profile_id": "SANDBOX_DEFAULT_00",
-                    "concentration_ppm": 1.0
-                }
-            }
+            return {"status": "unauthenticated_fallback", "indices": "static_nominal"}
 
-        system_prompt = (
-            "You are the Macro-Cognitive Tier of the MRG Crisis Grid.\n"
-            "You evaluate systemic ripple effects across macroeconomics, industry, and biology.\n"
-            "CRITICAL: You must include a structured 'sensory_telemetry' JSON block mapping the physical reality.\n"
-            "Map physical breakdown to frequency/intensity vectors, and biochemical or ambient states "
-            "to specific alphanumeric scent IDs derived from the system manifest."
-        )
-
-        user_content = f"Sector: {sector}. Current Emergency Vector: {current_state}."
-
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{self.endpoint}/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        body = {
+            "model": "deepseek-chat",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a real-time macro-economic calculation node. "
+                        "Return JSON indices matching market ripple adjustments."
+                    ),
                 },
-                json={
-                    "model": "deepseek-chat",
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_content}
-                    ],
-                    "response_format": {"type": "json_object"},
-                    "temperature": 0.3
+                {
+                    "role": "user",
+                    "content": f"Context: {current_state}. Incident input: {payload_text}",
                 },
-                timeout=30.0
-            )
-            response.raise_for_status()
-            return response.json()
+            ],
+            "response_format": {"type": "json_object"},
+        }
 
-
-# Compatibility helper used by the WebSocket pipeline and routes
-async def generate_macro_ripple(prompt: str) -> str:
-    """Lightweight wrapper that returns a plain-text analysis string for the streaming pipeline."""
-    orch = DeepSeekOrchestrator()
-    if not orch.api_key:
-        return f"[Sandbox Mode] Simulating systemic macro effects for: {prompt}"
-    try:
-        result = await orch.generate_crisis_step(sector="general", current_state=prompt)
-        if isinstance(result, dict):
-            return str(result.get("cascade_summary") or result.get("choices", [{}])[0].get("message", {}).get("content") or result)
-        return str(result)
-    except Exception as e:
-        return f"[DeepSeek fallback] Unable to reach model ({e}). Local simulation for: {prompt}"
+        try:
+            async with httpx.AsyncClient(timeout=4.0) as client:
+                response = await client.post(
+                    f"{self.endpoint}/chat/completions",
+                    headers=headers,
+                    json=body,
+                )
+                response.raise_for_status()
+                return response.json()
+        except (httpx.HTTPError, ValueError) as exc:
+            raise HTTPException(
+                status_code=502,
+                detail="Macro engine connection or response failed.",
+            ) from exc

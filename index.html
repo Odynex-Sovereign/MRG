@@ -1,100 +1,98 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b1020">
-  <title>MRG Simulation Grid</title>
-  <style>
-    :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #0b1020; color: #e5e7eb; }
-    body { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
-    header, section { border: 1px solid #263248; border-radius: 12px; background: #111a2c; padding: 1.25rem; margin-bottom: 1rem; }
-    h1 { margin: 0 0 .4rem; color: #5eead4; }
-    p { color: #aab6c8; }
-    #status { font-weight: 700; }
-    textarea { box-sizing: border-box; width: 100%; min-height: 120px; resize: vertical; border: 1px solid #34445e; border-radius: 8px; padding: .8rem; color: inherit; background: #0b1020; }
-    button { margin-top: .8rem; border: 0; border-radius: 8px; padding: .75rem 1rem; font-weight: 700; background: #2dd4bf; color: #07121b; cursor: pointer; }
-    button:disabled { opacity: .5; cursor: not-allowed; }
-    pre { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 5rem; color: #d1d5db; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRG Suite — Institutional Matrix Allocation</title>
+    <style>
+        :root { --bg: #09090b; --card: #18181b; --text: #f4f4f5; --accent: #22c55e; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; text-align: center; }
+        h1 { font-size: 2.5rem; margin-bottom: 10px; font-weight: 800; letter-spacing: -0.05em; }
+        p { color: #a1a1aa; margin-bottom: 40px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 1100px; margin: 0 auto; }
+        .card { background: var(--card); border: 1px solid #27272a; padding: 32px; border-radius: 12px; text-align: left; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-4px); border-color: #3f3f46; }
+        .tier-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; }
+        .price { font-size: 2rem; font-weight: 800; margin: 16px 0; color: var(--accent); }
+        .price span { font-size: 1rem; color: #a1a1aa; font-weight: 400; }
+        .features { list-style: none; padding: 0; margin: 0 0 32px 0; font-size: 0.9rem; color: #d4d4d8; line-items: 1.6; }
+        .features li::before { content: "✓ "; color: var(--accent); margin-right: 8px; font-weight: bold; }
+        .btn { display: block; text-align: center; background: var(--text); color: var(--bg); font-weight: 600; padding: 12px; border-radius: 6px; text-decoration: none; cursor: pointer; transition: background 0.2s; }
+        .btn:hover { background: #e4e4e7; }
+        .btn-featured { background: var(--accent); color: white; }
+        .btn-featured:hover { background: #16a34a; }
+    </style>
 </head>
 <body>
-  <header>
-    <h1>MRG Simulation Grid</h1>
-    <div>Service status: <span id="status">Connecting…</span></div>
-    <p>Submit a scenario to the simulation service. Sandbox mode works without external model credentials.</p>
-  </header>
-  <section>
-    <label for="scenario">Scenario prompt</label>
-    <textarea id="scenario" placeholder="Describe a scenario to simulate…"></textarea>
-    <button id="run" type="button" disabled>Connect to run simulation</button>
-  </section>
-  <section>
-    <h2>Analysis</h2>
-    <pre id="analysis">Waiting for a scenario.</pre>
-    <div id="sensory"></div>
-  </section>
-  <section>
-    <h2>Activity</h2>
-    <pre id="log" aria-live="polite"></pre>
-  </section>
-  <script>
-    const statusEl = document.getElementById('status');
-    const runButton = document.getElementById('run');
-    const analysisEl = document.getElementById('analysis');
-    const sensoryEl = document.getElementById('sensory');
-    const logEl = document.getElementById('log');
-    const socketScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const socket = new WebSocket(`${socketScheme}//${window.location.host}/ws/simulation`);
 
-    function log(message) {
-      logEl.textContent += `${new Date().toLocaleTimeString()} ${message}\n`;
-    }
+    <h1>Institutional Matrix Allocation</h1>
+    <p>Select your operational footprint to provision planet-scale crisis simulation grids instantly.</p>
 
-    socket.addEventListener('open', () => {
-      statusEl.textContent = 'Connected';
-      runButton.disabled = false;
-      runButton.textContent = 'Run simulation';
-      log('WebSocket connected.');
-    });
-    socket.addEventListener('close', () => {
-      statusEl.textContent = 'Disconnected';
-      runButton.disabled = true;
-      log('WebSocket disconnected. Reload the page to reconnect.');
-    });
-    socket.addEventListener('error', () => {
-      statusEl.textContent = 'Connection error';
-      log('Could not connect to the simulation service.');
-    });
-    socket.addEventListener('message', (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        if (message.type === 'MACRO_COGNITIVE_UPDATE') {
-          analysisEl.textContent = message.payload.analysis;
-          log('Analysis received.');
-        } else if (message.type === 'SENSORY_STREAM_INFO') {
-          sensoryEl.textContent = `Sensory output: ${message.payload.audio_chunk_size} bytes (${message.payload.status}).`;
-        } else if (message.type === 'SYSTEM_ERROR') {
-          log(`Error: ${message.payload.message}`);
-        } else if (message.type === 'SYSTEM_STATUS') {
-          log(message.payload.message);
+    <div class="grid">
+        <!-- Tier 1 -->
+        <div class="card">
+            <div>
+                <div class="tier-name">Molecular SaaS</div>
+                <div class="price">$15,000<span>/mo</span></div>
+                <ul class="features">
+                    <li>Generative Discovery NIM Access</li>
+                    <li>Batched Conformer Engine</li>
+                    <li>96.5% Target Margin Model</li>
+                </ul>
+            </div>
+            <div class="btn" onclick="initializeCheckout('tier_1')">Deploy License</div>
+        </div>
+
+        <!-- Tier 2 -->
+        <div class="card">
+            <div>
+                <div class="tier-name">Infrastructure Base</div>
+                <div class="price">$35,000<span>/mo</span></div>
+                <ul class="features">
+                    <li>Adaptive Structural Subgrades</li>
+                    <li>Regional Base Entitlements</li>
+                    <li>Subsurface Stabilization Framework</li>
+                </ul>
+            </div>
+            <div class="btn" onclick="initializeCheckout('tier_2')">Deploy License</div>
+        </div>
+
+        <!-- Tier 3 -->
+        <div class="card">
+            <div>
+                <div class="tier-name">Platinum CAVE</div>
+                <div class="price">$160,000<span>/mo</span></div>
+                <ul class="features">
+                    <li>Omniverse CloudXR Matrix Sync</li>
+                    <li>Headset-Free Multi-User Environments</li>
+                    <li>Vocal Stress Response Analytics</li>
+                </ul>
+            </div>
+            <div class="btn btn-featured" onclick="initializeCheckout('tier_3')">Deploy Master Suite</div>
+        </div>
+    </div>
+
+    <script>
+        async function initializeCheckout(tierId) {
+            // Generate a random mock session tracking identifier for testing
+            const targetSession = "session_" + Math.random().toString(36).substring(2, 9);
+            
+            try {
+                const response = await fetch('/billing/v1/checkout/create-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: targetSession, tier_id: tierId })
+                });
+                const data = await response.json();
+                if (data.checkout_url) {
+                    window.location.href = data.checkout_url;
+                } else {
+                    alert('Configuration Error: Unable to build checkout session loop.');
+                }
+            } catch (err) {
+                console.error('Network Error:', err);
+            }
         }
-      } catch (error) {
-        log('Received an unreadable response.');
-      }
-    });
-
-    runButton.addEventListener('click', () => {
-      const prompt = document.getElementById('scenario').value.trim();
-      if (!prompt) {
-        analysisEl.textContent = 'Enter a scenario prompt first.';
-        return;
-      }
-      analysisEl.textContent = 'Simulation running…';
-      sensoryEl.textContent = '';
-      socket.send(JSON.stringify({ action: 'TRIGGER_CRISIS', prompt }));
-      log('Scenario submitted.');
-    });
-  </script>
+    </script>
 </body>
 </html>
