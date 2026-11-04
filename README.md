@@ -47,15 +47,27 @@ python tests/mock_client_test.py
 
 ---
 
-## Production (Fly.io)
-
-See original deployment blueprint or:
+## Production (Fly.io) – recommended
 
 ```bash
-fly launch --no-deploy
-fly secrets set NVIDIA_NIM_API_KEY=... DEEPSEEK_API_KEY=... DATABASE_URL=...
+# 1. From the fixed package root
+fly launch --no-deploy --name mrg   # or pick a free name
+
+# 2. Set secrets (DATABASE_URL optional for pure sandbox)
+fly secrets set NVIDIA_NIM_API_KEY=nvapi-... DEEPSEEK_API_KEY=sk-... 
+# optional:
+# fly secrets set DATABASE_URL=postgresql://user:pass@host:5432/mrg
+
+# 3. Deploy
 fly deploy
+
+# 4. Verify
+fly status
+fly logs
+curl https://<your-app>.fly.dev/healthz
 ```
+
+The process now stays running after boot. Health checks pass immediately; WebSocket endpoint is at `/ws/simulation`.
 
 ---
 
@@ -79,18 +91,17 @@ Corporate · Political/Media · Healthcare · Veterinary · Industrial · Milita
 
 ---
 
-## What Was Fixed / Added in this Package
+## What Was Fixed / Added in this Package (Fly.io stable boot)
 
-- Complete `requirements.txt` (previously missing → Docker would fail)
-- Critical syntax error in WebSocket pipeline (code outside function scope)
-- Indentation / import errors in billing and legacy shim
-- Sequential, complete PostgreSQL migrations (base tables created first)
-- Correct NVIDIA NIM & DeepSeek API endpoints (OpenAI-compatible)
-- Graceful sandbox fallbacks when API keys are absent
-- Health checks, CORS, lifespan DB pool
-- `.env.example`, `Makefile`, improved Dockerfiles
-- NVIDIA stack documentation
-- Frontend `JSON.stringify` fix
+- Complete, installable `requirements.txt` (fastapi, uvicorn[standard], sqlalchemy, psycopg2-binary, asyncpg, python-dotenv, …)
+- Top-level `sqlalchemy` import no longer crashes the process when the package is missing or slow to load
+- Guarded / optional imports for db_client, deepseek_client, riva_tts → full sandbox mode without any API keys
+- Added `generate_macro_ripple()` compatibility helper + correct DeepSeek API base URL
+- `get_db()` dependency that never blocks boot (returns None on connection failure)
+- Hardened Dockerfile with HEALTHCHECK and proxy-headers
+- fly.toml: `auto_stop_machines = "off"`, explicit health check on `/healthz`, min_machines_running = 1, proper env
+- dotenv made optional so Fly secrets work without a local .env
+- Graceful fallbacks everywhere so the process stays alive after “booting”
 
 ---
 
