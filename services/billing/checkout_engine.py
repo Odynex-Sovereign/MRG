@@ -64,3 +64,9 @@ async def create_checkout_session(payload: CheckoutRequest):
         return {"checkout_url": session.url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+# Add this code block directly inside the price_catalog dictionary of services/billing/checkout_engine.py
+
+    price_catalog = {
+        "tier_starter": {"amount": 4900, "name": "Solo Practitioner License"},
+        "tier_growth": {"amount": 49900, "name": "Emerging Team License"},
+        # Keep existing high-tier mappings intact...
