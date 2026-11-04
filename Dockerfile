@@ -47,3 +47,20 @@ EXPOSE 8000
 
 # CRITICAL FIX: Explicitly bind the host to 0.0.0.0 so the fly-proxy can pass health checks
 CMD ["uvicorn", "services.streaming.websocket_pipeline:app", "--host", "0.0.0.0", "--port","8000"]
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "services.streaming.websocket_pipeline:app", "--host", "0.0.0.0", "--port", "8000"]
