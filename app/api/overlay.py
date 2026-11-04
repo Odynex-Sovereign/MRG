@@ -42,3 +42,18 @@ async def initialize_client_acquisition():
     
     # Run the background tracking loop completely hands-off separate from web traffic threads
     asyncio.create_task(crawler.start_autonomous_acquisition_loop())
+from app.api import marketplace as marketplace_router
+from services.procurement_crawler import ProgrammaticProcurementCrawler
+
+# 1. Register the headless API and marketplace endpoints
+app.include_router(marketplace_router.router)
+
+# 2. Boot up the autonomous client-acquisition loop at server launch
+@app.on_event("startup")
+async def launch_passive_income_acquisition():
+    crawler = ProgrammaticProcurementCrawler(
+        db_client=db_client,  # Maps to your asyncpg pool instance
+        comms_orchestrator=social_webhook_orchestrator  # Maps to your social webhook instance
+    )
+    asyncio.create_task(crawler.start_autonomous_acquisition_loop())
+    logger.info("[MRG Cluster] Version 39 autonomous procurement loops initialized.")
