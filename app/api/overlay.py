@@ -67,3 +67,13 @@ async def initialize_high_frequency_monetization():
     # Launch the task loop asynchronously separate from standard web traffic threads
     asyncio.create_task(yield_engine.start_high_frequency_yield_loop())
     logger.info("[MRG Cluster] High-frequency telemetry yield loops are live.")
+from services.scenarios.partnership_engine import PartnershipOrchestrationEngine
+
+@app.on_event("startup")
+async def initialize_corporate_partnerships():
+    # Hook the partnership engine directly into the application context
+    partnership_engine = PartnershipOrchestrationEngine(
+        db_client=db_client,
+        comms_orchestrator=social_webhook_orchestrator
+    )
+    logger.info("[MRG Cluster] Version 40 institutional partnership logic arrays initialized.")
