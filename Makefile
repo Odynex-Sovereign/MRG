@@ -1,24 +1,18 @@
-PYTHON ?= python3
-VENV ?= .venv
-APP_MODULE := services.streaming.websocket_pipeline:app
-PORT ?= 8000
+# Makefile
 
-.PHONY: venv install sandbox docker-up migrate test
+.PHONY: sandbox docker-up migrate test-billing install-deps
 
-venv:
-	$(PYTHON) -m venv $(VENV)
+install-deps:
+	pip install -r requirements.txt
 
-install: venv
-	. $(VENV)/bin/activate && pip install -U pip && pip install -r requirements.txt
-
-sandbox: install
-	. $(VENV)/bin/activate && PYTHONPATH=. uvicorn $(APP_MODULE) --host 0.0.0.0 --port $(PORT) --reload
+sandbox:
+	PYTHONPATH=. uvicorn services.streaming.websocket_pipeline:app --reload --port 8000
 
 docker-up:
-	docker compose up --build -d
+	docker compose up -d --build
 
 migrate:
-	DATABASE_URL=$${DATABASE_URL:-postgresql://mrg_admin:mrg_secure_password_2026@localhost:5432/mrg_simulation_grid} python run_migrations.py
+	PYTHONPATH=. python database/db_client.py
 
-test: install
-	. $(VENV)/bin/activate && pytest -q
+test-billing:
+	PYTHONPATH=. python tests/mock_client_test.py
