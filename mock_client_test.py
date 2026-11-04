@@ -1,31 +1,51 @@
 # tests/mock_client_test.py
 import asyncio
-import websockets
 import json
+import websockets
+from database.db_client import get_db_connection
+
+async def seed_test_session():
+    """Seeds an active simulation record attached to a high-margin Tier 3 Platinum license."""
+    print("Seeding localized database profile with explicit subscription tier structure...")
+    conn = get_db_connection()
+    if not conn:
+        print("Database not reached. Proceeding under default cloud sandbox fallback.")
+        return
+    try:
+        with conn.cursor() as cur:
+            # Upsert active master baseline session
+            cur.execute(
+                "INSERT INTO simulation_sessions (session_id, vertical) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+                ("integration_test_session", "Banking & Capital Risks")
+            )
+            # Provision Tier 3 Master subscription credentials
+            cur.execute(
+                "INSERT INTO billing_subscriptions (session_id, platform_tier, pricing_architecture, billing_value, target_margin_pct) VALUES (%s, %s, %s, %s, %s)",
+                ("integration_test_session", "tier_3", "monthly_master_sync", 160000.00, 92.1)
+            )
+        conn.commit()
+        print("Successfully provisioned active Tier 3 testing subscription tier.")
+    except Exception as e:
+        print(f"Database already populated or skipped initialization: {e}")
+    finally:
+        conn.close()
 
 async def run_smoke_test():
-    uri = "ws://localhost:8000/ws/simulation/test_session_01"
-    print(f"Opening connection to local stream engine: {uri}")
+    await seed_test_session()
+    uri = "ws://localhost:8000/ws/simulation/integration_test_session"
+    print(f"Connecting smoke client engine context to channel: {uri}")
     try:
         async with websockets.connect(uri) as websocket:
-            # Read initialization acknowledgement
-            welcome = await websocket.recv()
-            print(f"[Engine Response]: {welcome}")
+            init_frame = await websocket.recv()
+            print(f"[Verification Handshake Ack]: {init_frame}")
             
-            # Send sample telemetry data metrics frame
-            mock_telemetry = {
-                "vocal_stress": 0.42,
-                "decision_velocity": 12.5
-            }
-            print(f"[Client Sending]: {json.dumps(mock_telemetry)}")
-            await websocket.send(json.dumps(mock_telemetry))
+            mock_payload = {"vocal_stress": 0.15, "decision_velocity": 4.2}
+            await websocket.send(json.dumps(mock_payload))
             
-            # Receive real-time digital twin twin balance computation update
-            ack_response = await websocket.recv()
-            print(f"[Engine Calculations Echo]: {ack_response}")
-            
+            telemetry_echo = await websocket.recv()
+            print(f"[Engine Real-time Computations]: {telemetry_echo}")
     except Exception as e:
-        print(f"Pipeline connectivity test failed: {e}")
+        print(f"Licensing pipeline validation failed: {e}")
 
 if __name__ == "__main__":
     asyncio.run(run_smoke_test())
