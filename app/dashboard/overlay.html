@@ -1,0 +1,46 @@
+<div id="mrg-virtual-overlay-card" style="font-family: sans-serif; background: #111; color: #fff; padding: 20px; border-radius: 8px; border: 1px solid #333; max-width: 500px; margin: 20px auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px;">
+        <h4 style="margin: 0; color: #00bcd4;">📊 Live Data Federation Overlay</h4>
+        <span id="overlay-sync-badge" style="background: green; font-size: 11px; padding: 2px 6px; border-radius: 4px;">SYNCED</span>
+    </div>
+    
+    <div style="margin-top: 15px; display: flex; justify-content: space-between;">
+        <div>
+            <p style="font-size: 12px; color: #aaa; margin: 0;">Active Transaction Flows</p>
+            <h2 id="federated-tx-flows" style="margin: 5px 0 0 0; color: #fff;">0</h2>
+        </div>
+        <div style="text-align: right;">
+            <p style="font-size: 12px; color: #aaa; margin: 0;">Cluster CPU Utilization</p>
+            <h2 id="federated-cpu-load" style="margin: 5px 0 0 0; color: #ff9800;">0.0%</h2>
+        </div>
+    </div>
+
+    <div style="margin-top: 15px; background: #222; border-radius: 4px; padding: 10px; font-size: 12px;">
+        <span style="color: #aaa;">Network Speed:</span> <span id="federated-throughput" style="font-weight: bold;">0 Mbps</span>
+    </div>
+</div>
+
+<script>
+async function pollFederatedDataStream() {
+    try {
+        const response = await fetch('/api/overlay/metrics-stream');
+        if (!response.ok) throw new Error("Stream communication break.");
+        const data = await response.json();
+
+        // Dynamically update UI text nodes without reloading the client browser frame
+        document.getElementById('federated-tx-flows').innerText = data.business_metrics.active_transactional_flows;
+        document.getElementById('federated-cpu-load').innerText = data.hardware_metrics.cluster_cpu_utilization + "%";
+        document.getElementById('federated-throughput').innerText = data.hardware_metrics.network_throughput_mbps + " Mbps";
+        
+        document.getElementById('overlay-sync-badge').style.background = "green";
+        document.getElementById('overlay-sync-badge').innerText = "CONNECTED";
+    } catch (err) {
+        document.getElementById('overlay-sync-badge').style.background = "red";
+        document.getElementById('overlay-sync-badge').innerText = "RETRYING";
+    }
+}
+
+// Start continuous polling loop to update the interface frame every 3 seconds
+setInterval(pollFederatedDataStream, 3000);
+pollFederatedDataStream(); // Execution hook on initial component bootup
+</script>
