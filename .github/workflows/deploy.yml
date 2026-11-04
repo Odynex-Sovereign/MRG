@@ -1,31 +1,25 @@
-name: Deploy to Fly.io
+name: Deploy MRG Engine to Fly.io
 
 on:
   push:
     branches:
-      - main
+      - main  # Triggers the pipeline automatically when you save changes to main
 
 jobs:
   deploy:
-    name: Deploy Application
+    name: Build and Ship Premium Sensory Grid
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout Repository
+      - name: Checkout Code Repository
         uses: actions/checkout@v4
 
-      - name: Setup Flyctl
+      - name: Set up Fly.io CLI Environment
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Run Database Migrations
-        run: |
-          echo "Executing sequential database migrations via Fly proxy..."
-          # Securely executes migrations prior to application swap out
-          # flyctl ssh console -C "python database/run_migrations.py"
+      - name: Build Container and Deploy to Fly Proxy
+        # Fix: Stripped the --image flag completely to block stale remote overrides
+        # The --no-cache flag forces Fly's depot to parse your new Dockerfile and requirements
+        run: flyctl deploy --no-cache --config fly.toml
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-
-      - name: Deploy to Fly.io
-        run: flyctl deploy --remote-only
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-fly deploy --no-cache --config fly.toml
