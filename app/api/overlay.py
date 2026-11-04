@@ -30,3 +30,15 @@ async def schedule_hyperscale_tasks():
     
     # Run the background tracking loop asynchronously inside the app process thread pool
     asyncio.create_task(fleet_engine.launch_autonomous_fleet_recovery_monitor())
+from services.procurement_crawler import ProgrammaticProcurementCrawler
+
+@app.on_event("startup")
+async def initialize_client_acquisition():
+    # Instantiate the automated B2B customer ingestion engine
+    crawler = ProgrammaticProcurementCrawler(
+        db_client=db_client,  # Points to your global asyncpg pool
+        comms_orchestrator=social_webhook_orchestrator  # Points to your comms script
+    )
+    
+    # Run the background tracking loop completely hands-off separate from web traffic threads
+    asyncio.create_task(crawler.start_autonomous_acquisition_loop())
