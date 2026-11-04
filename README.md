@@ -1,80 +1,164 @@
 # MRG Integrated Simulation Suite
-### Planet-Scale Crisis Simulation Grid & Autonomous Command Engine
 
-[![License: MIT](https://shields.io)](https://opensource.org)
-[![Python 3.11+](https://shields.io)](https://python.org)
-[![Infrastructure: Fly.io](https://shields.io)](https://fly.io)
+**Planet-scale crisis simulation grid** for teams that train decision-makers under extreme cognitive and sensory pressure.
 
-MRG is a highly scalable, autonomous crisis simulation grid designed to map high-stakes professional stress into live, interactive digital twins. The core application runs headless across a high-availability rolling cluster of **5 distributed server nodes**, coordinating deep textual reasoning, low-latency sensory models, out-of-band communication failovers, and multi-channel financial loops entirely hands-off.
+[![CI](https://github.com/Odynex-Sovereign/MRG/actions/workflows/ci.yml/badge.svg)](https://github.com/Odynex-Sovereign/MRG/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue)](https://python.org)
 
----
+## Product overview
 
-## 🏗️ Technical Architecture & Core Layers
-Client (Visual Dashboard / Junior Canvas) ──WebSocket (/ws/simulation)──► FastAPI Cluster (5 Nodes)
-│
-┌──────────────────────────────┼──────────────────────────────┬───────┴──────────────────────┐
-▼                              ▼                              ▼                              ▼
-Macro-Cognitive Engine       Sensory Stream Pipeline       Out-of-Band Communications     Automated Financial Router
-(DeepSeek-V3 / Sandbox)      (NVIDIA Riva & Audio2Face)    (Twilio SMS / War Rooms)       (Stripe Connect & Braintree)
-### 1. Visualization & Immersion Layer
-* **Parallel Tensor Grids:** Vectorizes massive macro-crisis pipelines into clean matrix arrays via parallel compute pipelines, bypassing CPU blocks to execute thousands of simultaneous scenarios.
-* **Multisensory Streaming:** Integrates with `NVIDIA Riva TTS` and `Audio2Face` to map live text feeds into spoken dialog and responsive digital human animations.
+MRG combines:
 
-### 2. Autonomous Resilience Layer (`social_webhook.py`)
-* **Out-of-Band Routing:** Assumes primary internal communications will crash during critical failures. Diverts telemetry triggers directly over global `Twilio SMS/Voice` nodes and external workspace hooks to safeguard lines.
-* **Fleet Auto-Recovery Monitor:** Runs 24/7 background tasks (`hyper_scale.py`) that track cluster health, automatically migrating active memory states and isolating congested nodes without manual engineering input.
-### 3. Comprehensive Monetization & B2B Marketplace Layer
-* **Marketplace Revenue Splits:** Uses Stripe Connect to partition custom consultant scenario purchases at the edge, taking an automated 20% platform infrastructure cut completely hands-off.
-* **Headless API Tokenization:** Exposes unbundled data services for enterprise developers, charging fractional usage tariffs for streaming direct data frames into third-party dashboards.
-* **Dual Checkout Gateways:** Handles standard cards via Stripe and alternative digital wallets (PayPal/Venmo) via Braintree under a unified, compliant interface.
-* **Contextual Upsell Loops:** Watches user stress matrices in real time and automatically pushes checkout upgrades to client chat channels right at peak tension.
+- **Macro reasoning** (DeepSeek or offline sandbox)
+- **WebSocket simulation channel** for live telemetry and crisis prompts
+- **Sensory stream hooks** (NVIDIA Riva / Audio2Face ready)
+- **Transparent SaaS pricing** with demo checkout (Stripe-ready)
 
----
+**Target customers:** executive education, institutional risk teams, defense/training orgs, and operators running vertical crisis modules.
 
-## 📂 Vertical Market Scenario Manifest
+## Features
 
-* **`MRG_AUTO_04` (Automotive & EV Minerals):** Models multi-tier assembly lines, material markups, and unexpected supply chain blockades for raw Lithium and Cobalt.
-* **`Medical Specialties Suite` (Dentistry & Plastic Surgery):** Orchestrates localized autoclave hardware disruptions alongside data extortion threats targeting sensitive client archives.
-* **`Junior Academy Framework`:** A child-safe, gamified block-programming environment using custom puzzle tokens to teach younger students structural logic and agribusiness grid defense.
-* **`Regional Logistics Grids`:** Targets localized infrastructure setups, including the **Texas ERCOT Power Matrix** (Bitcoin mining curtailment demand-response arbitrage) and **Southwest Georgia Agribusiness Corridors** (cold-chain preservation logistics).
----
+- Responsive marketing site (pricing, demo, investors, FAQ, legal templates)
+- Interactive browser demo against `/ws/simulation`
+- `/api/pricing` + demo checkout with validation and clear non-live labeling
+- Health/readiness probes, structured logs, security headers
+- Optional Postgres, Docker Compose, Fly.io, K8s manifests
+- Metrics and admin demo dashboards (sample data labeled)
+- Investor roadmap page with explicit placeholders
 
-## 🚀 Quick Start Deployment Guide
+## Tech stack
 
-### Prerequisites
-* Python 3.11+
-* PostgreSQL DB Instance
-* API Credentials (DeepSeek, NVIDIA NIM, Stripe, Braintree, Twilio)
+| Area | Technology |
+|------|------------|
+| Backend | FastAPI, Uvicorn, Pydantic Settings |
+| Realtime | WebSockets |
+| Frontend | Accessible static HTML/CSS/JS |
+| DB (optional) | PostgreSQL + asyncpg |
+| Payments | Stripe adapter (demo until configured) |
+| Deploy | Docker, Compose, Fly.io, Kubernetes |
 
-### Local Configuration Setup
+See [DECISIONS.md](DECISIONS.md) for why this stack was chosen.
+
+## Project structure
+
+```
+mrg/                 Application package (API, config, pricing, services)
+app/                 Static UI pages + assets
+services/            Legacy/compat modules (billing, sensory adapters)
+database/            Migrations + pool helpers
+deploy/              K8s + Terraform starters
+docs/                Architecture, ops, runbook
+tests/               Pytest suite
+```
+
+## Prerequisites
+
+- Python 3.11+
+- Optional: Docker, `flyctl`, API keys (DeepSeek, NVIDIA, Stripe)
+
+## Local setup
+
 ```bash
-git clone https://github.com
+git clone https://github.com/Odynex-Sovereign/MRG.git
 cd MRG
 python3.11 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env # Inject appropriate platform credentials
+make install
+cp .env.example .env
+make sandbox
 ```
 
-### Direct Cluster Launch Sequence
+Open:
+
+- http://localhost:8000/ — home
+- http://localhost:8000/pricing — plans
+- http://localhost:8000/demo — live WebSocket demo
+- http://localhost:8000/docs — OpenAPI (non-production)
+
 ```bash
-# Apply database schemas
-python run_migrations.py
-
-# Initialize local sandbox playground server
-uvicorn app.app:app --host 0.0.0.0 --port 8000 --reload
+make test
+make smoke   # requires server running
 ```
 
-### Production Cluster Rollout (Fly.io)
-Ensure your target application environment properties match your localized cloud profile configuration secrets, then execute your deployment pipeline:
+## Environment variables
+
+See [`.env.example`](.env.example). Important keys:
+
+| Variable | Purpose |
+|----------|---------|
+| `ENVIRONMENT` | `development` / `staging` / `production` |
+| `DATABASE_URL` | Optional Postgres |
+| `DEEPSEEK_API_KEY` | Macro engine (sandbox if empty) |
+| `NVIDIA_NIM_API_KEY` | Sensory path |
+| `STRIPE_*` | Live billing (optional) |
+| `ADMIN_API_TOKEN` | Protect admin summary in production |
+| `CORS_ORIGINS` | Comma-separated origins |
+
+**Never commit real secrets.**
+
+## Pricing & subscriptions
+
+Plans are defined in **`mrg/pricing.py`** only:
+
+| Plan | Price |
+|------|-------|
+| Sandbox | $0 |
+| Starter | $49/mo ($470/yr) |
+| Growth | $499/mo ($4,790/yr) |
+| Enterprise | Contact sales |
+
+Checkout is **demo mode** until Stripe is connected. Full detail: [PRICING.md](PRICING.md).
+
+## Commands
+
 ```bash
-fly secrets set TWILIO_ACCOUNT_SID="AC..." BRAINTREE_ENVIRONMENT="production" STRIPE_API_KEY="sk_live_..."
-flyctl deploy --config fly.toml
+make lint format typecheck test test-cov
+make sandbox docker-up docker-down migrate smoke
 ```
 
----
+## Deployment
 
-## 🔒 Security & Data Compliance
-* **PCI-DSS Isolation:** All frontend financial checkouts use single-use tokenized nonces, deflecting card-handling vulnerabilities away from your hosting cluster.
-* **COPPA / GDPR Safeguards:** Unlocks absolute privacy defaults, blocks third-party tracking, and hides user tracking on youth-focused accounts.
-  
+- Docker Compose: `make docker-up`
+- Fly.io: see [DEPLOYMENT.md](DEPLOYMENT.md)
+- CI: `.github/workflows/ci.yml` (lint, typecheck, test, image build, optional Fly deploy)
+
+## Accessibility, security, SEO
+
+- Skip links, focus styles, semantic structure, reduced-motion support
+- Security headers, non-root containers, input validation
+- Meta description, Open Graph, JSON-LD on home, canonical placeholders
+
+## Troubleshooting
+
+| Issue | Action |
+|-------|--------|
+| Import errors | `export PYTHONPATH=.` and reinstall requirements |
+| WS fails behind proxy | Ensure WebSocket upgrade support |
+| `/readyz` 503 | DB configured but unreachable — fix DSN or unset `DATABASE_URL` |
+| Checkout errors | Only `free`/`starter`/`growth` are self-serve; accept terms required |
+
+More: [docs/runbook.md](docs/runbook.md)
+
+## Documentation index
+
+| Doc | Purpose |
+|-----|---------|
+| [PRICING.md](PRICING.md) | Plans & Stripe wiring |
+| [AUDIT.md](AUDIT.md) | Audit + investment scorecard |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System design |
+| [API.md](API.md) | HTTP/WS reference |
+| [METRICS.md](METRICS.md) | Analytics events |
+| [INVESTOR_READINESS.md](INVESTOR_READINESS.md) | Fundraising narrative |
+| [ROADMAP.md](ROADMAP.md) | Milestones |
+| [SECURITY.md](SECURITY.md) | Vulnerability reporting |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | Ship checklist |
+| [DECISIONS.md](DECISIONS.md) | ADRs & costs |
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+MIT — [LICENSE](LICENSE).

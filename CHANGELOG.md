@@ -1,30 +1,28 @@
 # Changelog
 
-All notable changes to this project are documented in this file.
+## [1.2.0] — 2026-11-04
+
+### Added
+- Centralized public pricing catalog (`mrg/pricing.py`) and `/api/pricing`
+- Demo checkout API and `/checkout` UI (explicitly non-live)
+- Multi-page product site: pricing, demo, onboarding, investors, metrics, admin, FAQ, status, legal
+- Contact API and form; analytics event hooks (`mrgTrack`)
+- PRICING.md, AUDIT.md, ARCHITECTURE.md, API.md, METRICS.md, INVESTOR_READINESS.md, ROADMAP.md, DEPLOYMENT.md, DECISIONS.md
+- Pricing/checkout/metrics API tests
+- Admin summary endpoint with optional token gate
+
+### Changed
+- Version 1.2.0; README rewritten for product + engineering onboarding
+- App factory serves static pages and mounts `/assets`
+
+### Security
+- Additional security headers (`Permissions-Policy`)
+- Demo data clearly labeled; no fabricated live payment claims
 
 ## [1.1.0] — 2026-11-04
 
-### Added
-- Production application package `mrg/` with settings, structured logging, security headers
-- Liveness (`/healthz`) and readiness (`/readyz`) probes plus `/info`
-- Pydantic-validated WebSocket telemetry protocol with size limits
-- Deterministic sandbox fallbacks for DeepSeek and sensory paths
-- Multi-stage non-root Dockerfile with HEALTHCHECK and tini
-- docker-compose with healthchecks, restart policy, read-only root
-- GitHub Actions CI: lint, mypy, pytest, Docker build, Fly deploy on main
-- Comprehensive docs: architecture, deployment, operations, runbook
-- SECURITY.md, CONTRIBUTING.md, RELEASE_CHECKLIST.md, CHANGELOG.md
-- Pinned dependencies and pyproject tool configuration
-
-### Changed
-- Entry point preferred as `mrg.app:app` (compat re-export kept for `services.streaming.websocket_pipeline:app`)
-- WebSocket accepts both telemetry packets and `TRIGGER_CRISIS` actions
-- Environment-driven configuration via `.env.example`
-
-### Security
-- Removed hardcoded production credentials from compose defaults (dev passwords only in examples)
-- Non-root container user, no-new-privileges, optional trusted hosts
+- Production `mrg/` package, health/ready probes, Docker/CI hardening, sandbox AI fallbacks
 
 ## [1.0.0] — prior
 
-- Initial MRG simulation suite prototype
+- Initial prototype suite

@@ -13,6 +13,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from mrg import __version__
@@ -20,28 +21,24 @@ from mrg.config import Settings, get_settings
 from mrg.logging_config import setup_logging
 
 logger = logging.getLogger("mrg")
-
-# Optional DB pool held at module level for lifespan
 _db_pool: Any = None
+STATIC_ROOT = Path(__file__).resolve().parents[1] / "app"
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """Add standard security headers to every response."""
-
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         if request.url.scheme == "https":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
 
 
 class RequestTimingMiddleware(BaseHTTPMiddleware):
-    """Log request duration and attach timing header."""
-
     async def dispatch(self, request: Request, call_next):
         start = time.perf_counter()
         response = await call_next(request)
@@ -61,7 +58,6 @@ class RequestTimingMiddleware(BaseHTTPMiddleware):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Startup / shutdown lifecycle."""
     settings: Settings = app.state.settings
     setup_logging(settings)
     logger.info(
@@ -72,7 +68,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             "sandbox": settings.sandbox_mode or not settings.has_deepseek,
         },
     )
-
     global _db_pool
     if settings.has_database:
         try:
@@ -92,9 +87,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     else:
         app.state.db_pool = None
         logger.info("no_database_configured — sandbox mode")
-
     yield
-
     if _db_pool is not None:
         await _db_pool.close()
         logger.info("database_pool_closed")
@@ -102,9 +95,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
-    """Application factory."""
     settings = settings or get_settings()
-
     app = FastAPI(
         title=settings.app_name,
         version=__version__,
@@ -119,7 +110,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = settings
 
-    # Middleware (order matters: last added runs first)
     app.add_middleware(RequestTimingMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
     if settings.trusted_hosts and settings.trusted_hosts != ["*"]:
@@ -132,33 +122,59 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Routes
     _register_routes(app, settings)
     return app
 
 
+def _page(name: str) -> FileResponse:
+    path = STATIC_ROOT / name
+    if not path.is_file():
+        path = STATIC_ROOT / "index.html"
+    return FileResponse(path, media_type="text/html")
+
+
 def _register_routes(app: FastAPI, settings: Settings) -> None:
     from mrg.api.health import router as health_router
+    from mrg.api.pricing import router as pricing_router
     from mrg.api.websocket import router as ws_router
 
     app.include_router(health_router)
     app.include_router(ws_router)
+    app.include_router(pricing_router)
 
-    static_root = Path(__file__).resolve().parents[1] / "app"
+    # Static assets (css/js)
+    assets = STATIC_ROOT / "assets"
+    if assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=str(assets)), name="assets")
 
-    @app.get("/", include_in_schema=False)
-    async def homepage():
-        index = static_root / "index.html"
-        if index.is_file():
-            return FileResponse(index, media_type="text/html")
-        return JSONResponse(
-            {
-                "service": settings.app_name,
-                "version": __version__,
-                "docs": "/docs",
-                "health": "/healthz",
-            }
-        )
+    # HTML pages
+    pages = {
+        "/": "index.html",
+        "/pricing": "pricing.html",
+        "/checkout": "checkout.html",
+        "/onboarding": "onboarding.html",
+        "/investors": "investors.html",
+        "/roadmap": "investors.html",
+        "/metrics": "metrics.html",
+        "/admin": "admin.html",
+        "/contact": "contact.html",
+        "/privacy": "privacy.html",
+        "/terms": "terms.html",
+        "/security-policy": "security-policy.html",
+        "/status": "status.html",
+        "/demo": "demo.html",
+        "/faq": "faq.html",
+    }
+
+    for route, filename in pages.items():
+
+        def make_handler(fn: str):
+            async def handler():
+                return _page(fn)
+
+            return handler
+
+        app.add_api_route(route, make_handler(filename), methods=["GET"], include_in_schema=False)
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):
@@ -169,5 +185,4 @@ def _register_routes(app: FastAPI, settings: Settings) -> None:
         )
 
 
-# Default app instance for uvicorn / gunicorn
 app = create_app()

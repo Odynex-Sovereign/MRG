@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     # Application
     app_name: str = "MRG Integrated Simulation Suite"
-    app_version: str = "1.1.0"
+    app_version: str = "1.2.0"
     environment: str = Field(default="development", description="development|staging|production")
     debug: bool = False
     log_level: str = "INFO"
@@ -71,6 +71,7 @@ class Settings(BaseSettings):
     sentry_dsn: str | None = None
 
     # Feature flags
+    admin_api_token: str | None = None
     enable_billing: bool = False
     enable_sensory: bool = True
     sandbox_mode: bool = True  # True when no external keys configured
