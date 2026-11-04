@@ -50,6 +50,10 @@ async def sensory_streaming_worker(session_id: str, websocket: WebSocket):
     except (WebSocketDisconnect, asyncio.CancelledError):
         pass
 
+@app.get("/")
+async def root_health_check():
+    return {"status": "healthy", "service": "MRG Engine Stack"}
+
 @app.websocket("/ws/simulation/{session_id}")
 async def websocket_simulation_endpoint(websocket: WebSocket, session_id: str, user_tier: str = "Standard"):
     await manager.connect(session_id, websocket, user_tier)
