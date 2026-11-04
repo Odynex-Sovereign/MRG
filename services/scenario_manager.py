@@ -21,3 +21,17 @@ class UniversalScenarioManager:
             return await self.industrial.trigger_construction_capital_attrition(identity_id)
         else:
             raise ValueError(f"Target industry profile vector '{target_industry}' not recognized.")
+from services.scenarios.untapped_sectors import UntappedSectorsEngine
+
+# Inside UniversalScenarioManager __init__:
+self.untapped = UntappedSectorsEngine(db_client, comms_orchestrator)
+
+# Inside trigger_arbitrary_industry_shock:
+if target_industry == "ev_automotive":
+    return await self.untapped.upgrade_mrg_auto_04_ev_battery(identity_id)
+elif target_industry == "corporate_law":
+    return await self.untapped.execute_legal_litigation_crisis(identity_id)
+elif target_industry == "luxury_fashion":
+    return await self.untapped.execute_luxury_fashion_disruption(identity_id)
+elif target_industry == "agritech":
+    return await self.untapped.execute_smart_agriculture_anomaly(identity_d)
