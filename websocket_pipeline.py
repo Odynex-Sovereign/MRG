@@ -52,7 +52,11 @@ async def sensory_streaming_worker(session_id: str, websocket: WebSocket):
 
 @app.get("/")
 async def root_health_check():
-    return {"status": "healthy", "service": "MRG Engine Stack"}
+    return {"status": "healthy", "service": "MRG Premium Sensory Grid Engine"}
+
+@app.get("/healthz")
+async def primary_healthz_check():
+    return {"status": "healthy"}
 
 @app.websocket("/ws/simulation/{session_id}")
 async def websocket_simulation_endpoint(websocket: WebSocket, session_id: str, user_tier: str = "Standard"):
