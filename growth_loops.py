@@ -32,3 +32,7 @@ class ViralGrowthEngine:
                 "twitter_x": f"https://twitter.com{share_text}&url={referral_link}"
             }
         }
+import asyncio  # <-- Paste this line right at the very top
+from fastapi import FastAPI
+from services.growth_loops import AutomatedMonetizationEngine
+# ... keep your other existing imports exactly as they are below this
