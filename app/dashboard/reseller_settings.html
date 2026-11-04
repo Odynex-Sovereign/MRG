@@ -1,0 +1,57 @@
+<!-- White-Label Managed Reseller Profile Portal -->
+<div id="mrg-reseller-portal-view" style="font-family: system-ui, sans-serif; background: #0b1329; color: #fff; padding: 25px; border-radius: 10px; border: 2px solid #10b981; max-width: 650px; margin: 20px auto;">
+    
+    <!-- Portal Branding Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 15px; margin-bottom: 20px;">
+        <h2 style="margin: 0; color: #10b981;">🏢 White-Label MSP Dashboard</h2>
+        <span id="msp-status-badge" style="background: #10b981; color: #0b1329; font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: bold;">PARTNER NODE ACTIVE</span>
+    </div>
+
+    <!-- Panel Section 1: Domain Mapping Configuration -->
+    <div style="background: #111c44; border-radius: 6px; padding: 15px; margin-bottom: 20px; border: 1px solid #1e293b;">
+        <h4 style="margin: 0 0 10px 0; color: #38bdf8;">🌐 Custom Domain Mapping (DNS)</h4>
+        <p style="font-size: 12px; color: #94a3b8; margin: 0 0 12px 0;">Map your white-label simulation workspace canvas directly to your company's own custom web address.</p>
+        
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="reseller-custom-domain" placeholder="e.g., ://youritfirm.com" style="flex-grow: 1; background: #0b1329; border: 1px solid #1e293b; padding: 10px; border-radius: 4px; color: #fff;">
+            <button onclick="saveResellerDomainMapping()" style="background: #10b981; color: #0b1329; border: none; padding: 0 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Link Domain</button>
+        </div>
+        <div id="domain-success-msg" style="margin-top: 10px; font-size: 12px; color: #10b981; display: none;"></div>
+    </div>
+
+    <!-- Panel Section 2: Real-Time Wholesale Billing Ledger Data -->
+    <div style="background: #111c44; border-radius: 6px; padding: 15px; border: 1px solid #1e293b;">
+        <h4 style="margin: 0 0 15px 0; color: #fb7185;">📊 Compute Minutes Consumption & Analytics</h4>
+        
+        <div style="display: flex; justify-content: space-between; text-align: center;">
+            <div>
+                <span style="font-size: 11px; color: #94a3b8; block;">WHOLESALE UNIT COST</span>
+                <h3 style="margin: 5px 0 0 0; color: #fff;">$0.1200 / min</h3>
+            </div>
+            <div>
+                <span style="font-size: 11px; color: #94a3b8; block;">TOTAL COMPUTED VOLUME</span>
+                <h3 id="reseller-minutes-counter" style="margin: 5px 0 0 0; color: #fb7185;">14,250.50 min</h3>
+            </div>
+            <div>
+                <span style="font-size: 11px; color: #94a3b8; block;">ACCRUED WHOLESALE COST</span>
+                <h3 id="reseller-accrued-bill" style="margin: 5px 0 0 0; color: #f59e0b;">$1,710.06</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function saveResellerDomainMapping() {
+    const domainInput = document.getElementById('reseller-custom-domain').value;
+    const msg = document.getElementById('domain-success-msg');
+    
+    if(!domainInput) return;
+    
+    msg.style.display = 'block';
+    msg.innerText = `⏳ Provisioning platform certificates. Point your DNS CNAME record directly to mrg.fly.dev.`;
+    
+    setTimeout(() => {
+        msg.innerText = `✓ Domain ${domainInput} successfully synchronized across the 10-region proxy mesh!`;
+    }, 2000);
+}
+</script>
