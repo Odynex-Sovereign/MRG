@@ -1,32 +1,35 @@
-import os
 import json
-import asyncio
 import logging
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
+from pathlib import Path
+
+from fastapi import Depends, FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-# Safe imports with fallback guards for infrastructure components
+# Optional infrastructure integrations must not prevent sandbox startup.
 try:
     from db_client import get_db
-    from deepseek_client import generate_macro_ripple
-    from riva_tts import synthesize_speech_stream
 except ImportError:
-    # Fail-safe stubs to prevent hard initialization crashes on Fly.io
     def get_db():
         yield None
-    async def generate_macro_ripple(prompt: str):
-        return f"[Sandbox Match] Simulating systemic macro effects for: {prompt}"
-    async def synthesize_speech_stream(text: str):
+
+try:
+    from deepseek_client import generate_macro_ripple
+except ImportError:
+    async def generate_macro_ripple(prompt: str) -> str:
+        return f"[Sandbox mode] Simulating systemic macro effects for: {prompt}"
+
+try:
+    from riva_tts import synthesize_speech_stream
+except ImportError:
+    async def synthesize_speech_stream(text: str) -> bytes:
         return b"MOCK_WAV_AUDIO_STREAM_DATA"
 
-# Set up runtime diagnostics loggers
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("mrg_pipeline")
 
 app = FastAPI(title="MRG Integrated Simulation Suite", version="1.0.0")
-
-# Enable Cross-Origin Resource Sharing for modern dashboard connections
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -35,109 +38,108 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- CRITICAL DEPLOYMENT SAFESTRUT: HEALTH & LIFESPAN CHECKERS ---
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Initializing planet-scale crisis simulation grid simulation pools...")
-    logger.info("Streaming networks, NVIDIA stacks, and DeepSeek interfaces successfully mapped.")
+    logger.info("MRG simulation service started")
 
-@app.get("/")
+
+@app.get("/", include_in_schema=False)
+async def homepage():
+    """Serve the browser UI instead of returning health JSON at the site root."""
+    index_file = Path(__file__).resolve().parents[2] / "index.html"
+    return FileResponse(index_file, media_type="text/html")
+
+
 @app.get("/healthz")
 async def health_check():
-    """Directly answers Fly.io's proxy smoke check to confirm instance vitality."""
+    """Liveness endpoint used by Fly.io and deployment checks."""
     return {
         "status": "healthy",
         "engine": "MRG Planet-Scale Grid",
-        "mode": "resilient_boot"
+        "mode": "resilient_boot",
     }
 
-# --- CORE SIMULATION STREAMING LOOP ---
 
 class SimulationConnectionManager:
-    """Manages active professional stress simulation sessions over WebSockets."""
+    """Tracks active simulation WebSocket connections."""
+
     def __init__(self):
         self.active_connections: list[WebSocket] = []
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
-        logger.info(f"Active simulation seat established. Total connections: {len(self.active_connections)}")
+        logger.info("Simulation connection accepted; active=%d", len(self.active_connections))
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
-            logger.info(f"Simulation seat terminated. Total connections: {len(self.active_connections)}")
+            logger.info("Simulation connection closed; active=%d", len(self.active_connections))
 
-    async def broadcast_telemetry(self, message: dict):
-        for connection in self.active_connections:
-            try:
-                await connection.send_json(message)
-            except Exception:
-                pass # Suppress broken pipe errors for dropping nodes
 
 manager = SimulationConnectionManager()
 
+
 @app.websocket("/ws/simulation")
 async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)):
-    """
-    Main real-time simulation corridor. 
-    Ingests executive input, pushes to structural cognitive layers, 
-    and handles live sensory avatar updates.
-    """
     await manager.connect(websocket)
     try:
-        # Acknowledge connection initialization
         await websocket.send_json({
             "type": "SYSTEM_STATUS",
-            "payload": {"message": "Connected to core crisis simulation twin."}
+            "payload": {"message": "Connected to the MRG simulation service."},
         })
-        
         while True:
-            # Await real-time payload from front-end simulation controller
-            data = await websocket.receive_text()
+            raw_message = await websocket.receive_text()
             try:
-                payload = json.loads(data)
-                action = payload.get("action", "")
-                prompt = payload.get("prompt", "")
-                
-                logger.info(f"Processing real-time simulation token action: {action}")
-                
-                if action == "TRIGGER_CRISIS":
-                    # 1. Evaluate long-horizon global structural reasoning
-                    macro_response = await generate_macro_ripple(prompt)
-                    await websocket.send_json({
-                        "type": "MACRO_COGNITIVE_UPDATE",
-                        "payload": {"analysis": macro_response}
-                    })
-                    
-                    # 2. Convert raw cognitive logic to sensory voice response
-                    # Synthesizing voice adversarial dialogue
-                    audio_bytes = await synthesize_speech_stream(macro_response[:200])
-                    await websocket.send_json({
-                        "type": "SENSORY_STREAM_INFO",
-                        "payload": {"audio_chunk_size": len(audio_bytes), "status": "streaming"}
-                    })
-                    
-                else:
-                    await websocket.send_json({
-                        "type": "SYSTEM_ERROR",
-                        "payload": {"message": f"Unknown execution target: {action}"}
-                    })
-                    
+                payload = json.loads(raw_message)
             except json.JSONDecodeError:
                 await websocket.send_json({
                     "type": "SYSTEM_ERROR",
-                    "payload": {"message": "Invalid JSON frame received."}
+                    "payload": {"message": "Invalid JSON frame received."},
                 })
-                
+                continue
+
+            action = payload.get("action", "")
+            if action != "TRIGGER_CRISIS":
+                await websocket.send_json({
+                    "type": "SYSTEM_ERROR",
+                    "payload": {"message": f"Unknown execution target: {action}"},
+                })
+                continue
+
+            prompt = str(payload.get("prompt", ""))
+            try:
+                macro_response = await generate_macro_ripple(prompt)
+                await websocket.send_json({
+                    "type": "MACRO_COGNITIVE_UPDATE",
+                    "payload": {"analysis": macro_response},
+                })
+                audio_bytes = await synthesize_speech_stream(macro_response[:200])
+                await websocket.send_json({
+                    "type": "SENSORY_STREAM_INFO",
+                    "payload": {"audio_chunk_size": len(audio_bytes), "status": "streaming"},
+                })
+            except Exception:
+                logger.exception("Simulation request failed")
+                await websocket.send_json({
+                    "type": "SYSTEM_ERROR",
+                    "payload": {"message": "Simulation request failed; check application logs."},
+                })
     except WebSocketDisconnect:
+        pass
+    except Exception:
+        logger.exception("WebSocket pipeline failed")
+    finally:
         manager.disconnect(websocket)
-    except Exception as e:
-        logger.error(f"Error inside active websocket stream pipeline: {e}")
-        manager.disconnect(websocket)
+
 
 if __name__ == "__main__":
     import uvicorn
-    # Enforce strict public interface binding for runtime safety
-    uvicorn.run("websocket_pipeline:app", host="0.0.0.0", port=8000, reload=False)
+
+    uvicorn.run(
+        "services.streaming.websocket_pipeline:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=False,
+    )

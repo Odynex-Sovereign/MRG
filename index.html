@@ -1,286 +1,100 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Odynex Axis Logistics LLC — Crisis Simulation Grid</title>
-    <!-- Tailwind CSS Engine -->
-    <script src="https://tailwindcss.com"></script>
-    <style>
-        .glow-border { box-shadow: 0 0 15px rgba(20, 184, 166, 0.15); }
-        .glow-text { text-shadow: 0 0 8px rgba(20, 184, 166, 0.6); }
-        .map-scanline {
-            background: linear-gradient(to bottom, rgba(20,184,166,0), rgba(20,184,166,0.05) 50%, rgba(20,184,166,0) 100%);
-            background-size: 100% 4px;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>MRG Simulation Grid</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #0b1020; color: #e5e7eb; }
+    body { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+    header, section { border: 1px solid #263248; border-radius: 12px; background: #111a2c; padding: 1.25rem; margin-bottom: 1rem; }
+    h1 { margin: 0 0 .4rem; color: #5eead4; }
+    p { color: #aab6c8; }
+    #status { font-weight: 700; }
+    textarea { box-sizing: border-box; width: 100%; min-height: 120px; resize: vertical; border: 1px solid #34445e; border-radius: 8px; padding: .8rem; color: inherit; background: #0b1020; }
+    button { margin-top: .8rem; border: 0; border-radius: 8px; padding: .75rem 1rem; font-weight: 700; background: #2dd4bf; color: #07121b; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 5rem; color: #d1d5db; }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-mono min-h-screen flex flex-col selection:bg-teal-500 selection:text-slate-950">
+<body>
+  <header>
+    <h1>MRG Simulation Grid</h1>
+    <div>Service status: <span id="status">Connecting…</span></div>
+    <p>Submit a scenario to the simulation service. Sandbox mode works without external model credentials.</p>
+  </header>
+  <section>
+    <label for="scenario">Scenario prompt</label>
+    <textarea id="scenario" placeholder="Describe a scenario to simulate…"></textarea>
+    <button id="run" type="button" disabled>Connect to run simulation</button>
+  </section>
+  <section>
+    <h2>Analysis</h2>
+    <pre id="analysis">Waiting for a scenario.</pre>
+    <div id="sensory"></div>
+  </section>
+  <section>
+    <h2>Activity</h2>
+    <pre id="log" aria-live="polite"></pre>
+  </section>
+  <script>
+    const statusEl = document.getElementById('status');
+    const runButton = document.getElementById('run');
+    const analysisEl = document.getElementById('analysis');
+    const sensoryEl = document.getElementById('sensory');
+    const logEl = document.getElementById('log');
+    const socketScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const socket = new WebSocket(`${socketScheme}//${window.location.host}/ws/simulation`);
 
-    <!-- Top Navigation Header -->
-    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur px-6 py-4 flex justify-between items-center">
-        <div class="flex items-center space-x-3">
-            <div class="w-3 h-3 bg-teal-500 rounded-full animate-pulse shadow-[0_0_8px_#14b8a6]"></div>
-            <h1 class="text-md tracking-widest font-bold uppercase text-slate-300">
-                Odynex Axis Logistics LLC <span class="text-teal-400 font-normal">// Simulation Command Matrix</span>
-            </h1>
-        </div>
-        <div class="flex items-center space-x-6 text-xs text-slate-400">
-            <div>AUDIO: <span id="audio-status" class="text-amber-500 uppercase">READY (CLICK ENGINE TO INIT)</span></div>
-            <div>NETWORK: <span id="conn-status" class="text-rose-500 font-bold uppercase">Disconnected</span></div>
-            <div>REGION: <span class="text-slate-200">DFW-MAIN</span></div>
-        </div>
-    </header>
+    function log(message) {
+      logEl.textContent += `${new Date().toLocaleTimeString()} ${message}\n`;
+    }
 
-    <!-- Main Command Matrix Grid -->
-    <main class="flex-1 p-6 grid grid-cols-1 xl:grid-cols-4 gap-6 max-w-[1920px] w-full mx-auto">
-        
-        <!-- Column 1: Input & Asset Tracking Controllers -->
-        <section class="xl:col-span-1 flex flex-col space-y-6">
-            <div class="bg-slate-900/40 border border-slate-800 rounded p-5 flex flex-col space-y-4 glow-border">
-                <div class="text-xs uppercase text-teal-400 tracking-wider font-bold border-b border-slate-800 pb-2">
-                    Simulation Controller
-                </div>
-                <div>
-                    <label class="text-xs text-slate-400 block mb-2">TARGET SCENARIO PAYLOAD:</label>
-                    <textarea id="scenario-input" rows="4" class="w-full bg-slate-950 border border-slate-800 rounded p-3 text-sm focus:outline-none focus:border-teal-500 text-slate-200 resize-none font-sans" placeholder="Describe the supply chain bottleneck or macro failure vector..."></textarea>
-                </div>
-                <button id="trigger-btn" disabled class="w-full bg-slate-800 text-slate-400 font-bold text-sm uppercase tracking-wider py-3 rounded cursor-not-allowed transition-all duration-200 hover:bg-slate-700">
-                    Awaiting Grid Uplink...
-                </button>
-            </div>
-
-            <!-- Telemetry Status Nodes -->
-            <div class="bg-slate-900/40 border border-slate-800 rounded p-5 grid grid-cols-2 gap-4">
-                <div class="bg-slate-950 border border-slate-900 p-3 rounded">
-                    <div class="text-[10px] text-slate-500 uppercase">Cognitive Layer</div>
-                    <div id="cognitive-state" class="text-xs text-slate-400 mt-1 truncate">STANDBY</div>
-                </div>
-                <div class="bg-slate-950 border border-slate-900 p-3 rounded">
-                    <div class="text-[10px] text-slate-500 uppercase">Sensory Buffer</div>
-                    <div id="sensory-state" class="text-xs text-slate-400 mt-1 truncate">0 BYTES</div>
-                </div>
-            </div>
-
-            <!-- Asset Tracking Telemetry Monitor -->
-            <div class="bg-slate-900/40 border border-slate-800 rounded p-5 flex-1 flex flex-col min-h-[200px]">
-                <div class="text-xs uppercase text-slate-400 tracking-wider font-bold border-b border-slate-800 pb-2 mb-3">
-                    Active Transponder Intercepts
-                </div>
-                <div id="asset-manifest" class="text-xs text-slate-400 space-y-2 overflow-y-auto flex-1">
-                    <div class="text-slate-500 italic">No asset vector shifts loaded. Grid idling.</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Columns 2-4: Real-time Map, Cognitive Feedback and Terminal Logs -->
-        <section class="xl:col-span-3 flex flex-col space-y-6">
-            
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
-                <!-- Center: Geospatial Asset Layout Grid Map -->
-                <div class="lg:col-span-2 bg-slate-900/40 border border-slate-800 rounded p-5 flex flex-col min-h-[400px] relative overflow-hidden">
-                    <div class="text-xs uppercase text-teal-400 tracking-wider font-bold border-b border-slate-800 pb-2 mb-4 z-10">
-                        Geospatial Supply Chain Vector Tracking Grid
-                    </div>
-                    <!-- Vector Grid Simulator Graphic Canvas Wrapper -->
-                    <div class="flex-1 border border-slate-900 rounded bg-slate-950/80 relative map-scanline overflow-hidden flex items-center justify-center">
-                        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#14b8a6_1px,transparent_1px)] [background-size:16px_16px]"></div>
-                        <canvas id="vector-map-canvas" class="absolute inset-0 w-full h-full"></canvas>
-                        <div id="map-overlay-prompt" class="text-xs text-slate-600 uppercase tracking-widest pointer-events-none z-10">
-                            Awaiting coordinate telemetry map injection...
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Side: Structural Reasoning Response Feed -->
-                <div class="lg:col-span-1 bg-slate-900/40 border border-slate-800 rounded p-5 flex flex-col">
-                    <div class="text-xs uppercase text-teal-400 tracking-wider font-bold border-b border-slate-800 pb-2 mb-4">
-                        Macro-Cognitive Structural Analysis Feed
-                    </div>
-                    <div id="analysis-display" class="flex-1 text-slate-400 text-sm overflow-y-auto font-sans leading-relaxed whitespace-pre-wrap bg-slate-950/60 p-4 border border-slate-900 rounded scrollbar-thin">
-                        System idling. Input a structural logistics failure vector to engage DeepSeek-V3 macro modeling loops...
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bottom: System Telemetry Logging Deck -->
-            <div class="h-44 bg-slate-950 border border-slate-900 rounded p-4 flex flex-col">
-                <div class="text-[10px] uppercase text-slate-500 tracking-wider mb-2 flex justify-between">
-                    <span>System Telemetry Log Corridor</span>
-                    <span class="animate-pulse text-teal-400 font-bold">● LIVE INTERACTIVE RECONNECT GRID</span>
-                </div>
-                <div id="terminal-log" class="flex-1 text-xs text-emerald-500/80 overflow-y-auto space-y-1 scrollbar-thin">
-                    <div>[SYS] Initializing local client console matrix...</div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Core Pipeline & Sensory Rendering Controller Script -->
-    <script>
-        const connStatus = document.getElementById('conn-status');
-        const audioStatus = document.getElementById('audio-status');
-        const scenarioInput = document.getElementById('scenario-input');
-        const triggerBtn = document.getElementById('trigger-btn');
-        const analysisDisplay = document.getElementById('analysis-display');
-        const terminalLog = document.getElementById('terminal-log');
-        const cognitiveState = document.getElementById('cognitive-state');
-        const sensoryState = document.getElementById('sensory-state');
-        const assetManifest = document.getElementById('asset-manifest');
-        const mapOverlayPrompt = document.getElementById('map-overlay-prompt');
-        const canvas = document.getElementById('vector-map-canvas');
-        const ctx = canvas.getContext('2d');
-
-        // Target your verified live Fly.io deployment pipeline corridor
-        const WS_URI = "wss://mrg.fly.dev/ws/simulation";
-
-        // Real-Time Browser Audio Buffer API Pipeline Variables
-        let audioCtx = null;
-        function initAudioEngine() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                audioStatus.textContent = "ONLINE / DECODING STREAM";
-                audioStatus.className = "text-teal-400 font-bold";
-                logToConsole("Browser AudioContext synthesized successfully.");
-            }
+    socket.addEventListener('open', () => {
+      statusEl.textContent = 'Connected';
+      runButton.disabled = false;
+      runButton.textContent = 'Run simulation';
+      log('WebSocket connected.');
+    });
+    socket.addEventListener('close', () => {
+      statusEl.textContent = 'Disconnected';
+      runButton.disabled = true;
+      log('WebSocket disconnected. Reload the page to reconnect.');
+    });
+    socket.addEventListener('error', () => {
+      statusEl.textContent = 'Connection error';
+      log('Could not connect to the simulation service.');
+    });
+    socket.addEventListener('message', (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        if (message.type === 'MACRO_COGNITIVE_UPDATE') {
+          analysisEl.textContent = message.payload.analysis;
+          log('Analysis received.');
+        } else if (message.type === 'SENSORY_STREAM_INFO') {
+          sensoryEl.textContent = `Sensory output: ${message.payload.audio_chunk_size} bytes (${message.payload.status}).`;
+        } else if (message.type === 'SYSTEM_ERROR') {
+          log(`Error: ${message.payload.message}`);
+        } else if (message.type === 'SYSTEM_STATUS') {
+          log(message.payload.message);
         }
+      } catch (error) {
+        log('Received an unreadable response.');
+      }
+    });
 
-        function logToConsole(message, type = "SYS") {
-            const row = document.createElement('div');
-            row.textContent = `[${type}] ${message}`;
-            terminalLog.appendChild(row);
-            terminalLog.scrollTop = terminalLog.scrollHeight;
-        }
-
-        // Canvas Responsive Resize Function
-        function resizeCanvas() {
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
-            drawGridBaselines();
-        }
-        window.addEventListener('resize', resizeCanvas);
-        setTimeout(resizeCanvas, 100);
-
-        function drawGridBaselines() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = "rgba(20, 184, 166, 0.05)";
-            ctx.lineWidth = 1;
-            // Draw crosshairs
-            ctx.beginPath();
-            ctx.moveTo(canvas.width / 2, 0); ctx.lineTo(canvas.width / 2, canvas.height);
-    ctx.moveTo(0, canvas.height / 2); ctx.lineTo(canvas.width, canvas.height / 2);
-ctx.stroke();
-}
-// Simulates dynamic geolocation routing anomalies on map canvas based on crisis input
-function renderMapCrisisVectors() {
-mapOverlayPrompt.style.display = 'none';
-drawGridBaselines();
-const points = [
-{x: canvas.width * 0.2, y: canvas.height * 0.4, label: "HUB-EU"},
-{x: canvas.width * 0.5, y: canvas.height * 0.3, label: "PORT-SUEZ"},
-{x: canvas.width * 0.8, y: canvas.height * 0.7, label: "TER-SINGAPORE"}
-];
-// Render Connection Vector Paths
-ctx.strokeStyle = "rgba(239, 68, 68, 0.4)";
-ctx.lineWidth = 1.5;
-ctx.setLineDash([4, 4]);
-ctx.beginPath();
-ctx.moveTo(points[0].x, points[0].y);
-for(let i=1; i<points.length; i++) {
-ctx.lineTo(points[i].x, points[i].y);
-}
-ctx.stroke();
-ctx.setLineDash([]);
-// Render Node Points
-points.forEach(pt => {
-ctx.fillStyle = "#ef4444";
-ctx.beginPath();
-ctx.arc(pt.x, pt.y, 4, 0, 2 * Math.PI);
-ctx.fill();
-// Ring tracking flash pulse animation boundary
-ctx.strokeStyle = "rgba(239, 68, 68, 0.3)";
-ctx.beginPath();
-ctx.arc(pt.x, pt.y, 10, 0, 2 * Math.PI);
-ctx.stroke();
-ctx.fillStyle = "rgba(148, 163, 184, 0.8)";
-ctx.font = "9px monospace";
-ctx.fillText(pt.label, pt.x + 8, pt.y + 3);
-});
-// Re-render Left Panel Information Lists
-assetManifest.innerHTML = <div class="p-2 bg-rose-950/20 border border-rose-900/30 rounded"> <span class="text-rose-400 font-bold">[CRITICAL BLOCK]</span> VECTOR AXIS HUB-EU -> PORT-SUEZ latency spike detected. Re-routing failed. </div> <div class="p-2 bg-slate-900 border border-slate-800 rounded"> <span class="text-amber-400 font-bold">[REROUTING]</span> ODYNEX-CARRIER-709 modified course heading tracking alternate global paths. </div>;
-}
-// Handles rendering raw streaming data blocks to audio hardware outputs safely
-async function playSensoryAudioChunk(rawAudioString) {
-try {
-if (!audioCtx) return;
-// If backend provides raw base64 data, convert to ArrayBuffer; otherwise use a synthetic sweep
-const frequency = 220 + Math.random() * 440;
-let osc = audioCtx.createOscillator();
-let gainNode = audioCtx.createGain();
-osc.type = 'sine';
-osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
-gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
-osc.connect(gainNode);
-gainNode.connect(audioCtx.destination);
-osc.start();
-osc.stop(audioCtx.currentTime + 0.4);
-} catch (err) {
-logToConsole("Audio system parsing block errored out.", "ERR");
-}
-}
-// Establish the live duplex streaming network
-logToConsole(Opening channel to ${WS_URI}...);
-const ws = new WebSocket(WS_URI);
-ws.onopen = () => {
-connStatus.textContent = "Connected";
-connStatus.className = "text-teal-400 font-bold uppercase glow-text";
-triggerBtn.disabled = false;
-triggerBtn.textContent = "Trigger Crisis Simulation";
-triggerBtn.className = "w-full bg-teal-600 hover:bg-teal-500 text-slate-950 font-bold text-sm uppercase tracking-wider py-3 rounded cursor-pointer shadow-[0_0_10px_rgba(20,184,166,0.3)] transition-all duration-200";
-logToConsole("Handshake cleared. Simulation grid is active.");
-};
-ws.onmessage = (event) => {
-try {
-const data = JSON.parse(event.data);
-logToConsole(Inbound payload: ${data.type}, "NET");
-if (data.type === "SYSTEM_STATUS") {
-logToConsole(data.payload.message, "GRID");
-}
-else if (data.type === "MACRO_COGNITIVE_UPDATE") {
-cognitiveState.textContent = "ACTIVE_PROCESSING";
-cognitiveState.className = "text-xs text-teal-400 font-bold";
-analysisDisplay.textContent = data.payload.analysis;
-logToConsole("Macro structural ripple logic written to buffer.");
-renderMapCrisisVectors();
-}
-else if (data.type === "SENSORY_STREAM_INFO") {
-sensoryState.textContent = ${data.payload.audio_chunk_size} BYTES;
-sensoryState.className = "text-xs text-purple-400 font-bold";
-logToConsole(Sensory avatar voice frame buffered (${data.payload.audio_chunk_size} bytes).);
-playSensoryAudioChunk(data.payload.audio_data);
-}
-} catch (err) {
-logToConsole("Malformed data frame received.", "ERR");
-}
-};
-ws.onclose = () => {
-connStatus.textContent = "Disconnected";
-connStatus.className = "text-rose-500 font-bold uppercase";
-triggerBtn.disabled = true;
-logToConsole("Channel closed by host grid infrastructure.", "ERR");
-};
-triggerBtn.addEventListener('click', () => {
-// Safe initialize audio context loop on user click interaction
-initAudioEngine();
-const promptText = scenarioInput.value.trim();
-if (!promptText) return;
-const payload = {
-action: "TRIGGER_CRISIS",
-prompt: promptText
-};
-logToConsole(Broadcasting strategic scenario token...);
-ws.send(JSON.stringify(payload));
-cognitiveState.textContent = "AWAITING_REASONING...";
-cognitiveState.className = "text-xs text-amber-500 animate-pulse";
-});
+    runButton.addEventListener('click', () => {
+      const prompt = document.getElementById('scenario').value.trim();
+      if (!prompt) {
+        analysisEl.textContent = 'Enter a scenario prompt first.';
+        return;
+      }
+      analysisEl.textContent = 'Simulation running…';
+      sensoryEl.textContent = '';
+      socket.send(JSON.stringify({ action: 'TRIGGER_CRISIS', prompt }));
+      log('Scenario submitted.');
+    });
+  </script>
+</body>
+</html>
