@@ -1,23 +1,46 @@
+# services/cognitive/deepseek_client.py
+import os
 import httpx
-from api_keys import DEEPSEEK_API_KEY, IS_SANDBOX
+from typing import Dict, Any
 
-DEEPSEEK_API_URL = "https://deepseek.com"
-
-async def generate_macro_ripple(prompt: str) -> str:
-    if IS_SANDBOX:
-        return "[SANDBOX MOCK] Macro-Cognitive Layer: Simulated butterfly effect triggered globally."
+class DeepSeekMacroClient:
+    def __init__(self):
+        self.api_key = os.getenv("DEEPSEEK_API_KEY", "sandbox_key")
+        self.base_url = "https://deepseek.com" # OpenAI-compatible endpoint
         
-    headers = {
-        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "model": "deepseek-v3",
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.7
-    }
-    
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(DEEPSEEK_API_URL, json=payload, headers=headers)
-        response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"]
+    async def analyze_systemic_ripple(self, vertical: str, context_state: Dict[str, Any]) -> Dict[str, Any]:
+        if self.api_key == "sandbox_key":
+            # Graceful sandbox mode fallback
+            return {
+                "mode": "sandbox",
+                "macro_cascade": "Sandbox simulation triggered. No deep systemic effects generated.",
+                "severity_index": 0.1
+            }
+            
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        prompt = f"Analyze structural ripple effects for the {vertical} vertical given this data state: {json.dumps(context_state)}"
+        
+        payload = {
+            "model": "deepseek-chat", # DeepSeek-V3 chat identifier
+            "messages": [
+                {"role": "system", "content": "You are the macro-cognitive matrix coordinator for a planet-scale crisis grid."},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.3
+        }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(self.base_url, headers=headers, json=payload, timeout=30.0)
+            if response.status_code == 200:
+                result = response.json()
+                return {
+                    "mode": "production",
+                    "macro_cascade": result["choices"][0]["message"]["content"],
+                    "severity_index": 0.85
+                }
+            else:
+                raise Exception(f"DeepSeek client failure: {response.status_code} - {response.text}")
