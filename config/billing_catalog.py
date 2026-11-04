@@ -1,6 +1,36 @@
 # config/billing_catalog.py
 
 PRICING_TIERS = {
+    # --- STRATEGIC ENTRY-LEVEL & VIRAL TIERS ---
+    "tier_free": {
+        "layer": "Developer Sandbox",
+        "tech_core": "Public OpenUSD / Riva Shim",
+        "rate": 0.00,
+        "type": "forever_free_limitations",
+        "target_margin": 100.0,
+        "max_concurrent_sessions": 1,
+        "daily_minutes_cap": 15
+    },
+    "tier_starter": {
+        "layer": "Solo Practitioner",
+        "tech_core": "Standard Model NIM Access",
+        "rate": 49.00,
+        "type": "monthly_subscription",
+        "target_margin": 91.5,
+        "max_concurrent_sessions": 2,
+        "daily_minutes_cap": 120
+    },
+    "tier_growth": {
+        "layer": "Emerging Team",
+        "tech_core": "Shared NVIDIA CloudXR Instance",
+        "rate": 499.00,
+        "type": "monthly_subscription",
+        "target_margin": 88.2,
+        "max_concurrent_sessions": 5,
+        "daily_minutes_cap": 720
+    },
+
+    # --- EXISTING INSTITUTIONAL TIERS ---
     "tier_1": {
         "layer": "Molecular SaaS",
         "tech_core": "Generative Discovery NIM",
@@ -10,7 +40,7 @@ PRICING_TIERS = {
     },
     "tier_2": {
         "layer": "Infrastructure",
-        "tech_core": "Cassava Shear-Thickening Gels",
+        "tech_core": "Adaptive Structural Subgrades",
         "rate": 35000.00,
         "type": "monthly_regional_base",
         "target_margin": 71.4
@@ -25,7 +55,7 @@ PRICING_TIERS = {
     "tier_4": {
         "layer": "Genomics",
         "tech_core": "Structural Molecular Models",
-        "rate": 0.00,  # Custom Retainer Basis
+        "rate": 0.00,  
         "type": "custom_retainer",
         "target_margin": 94.2
     },
@@ -39,7 +69,7 @@ PRICING_TIERS = {
     "tier_6": {
         "layer": "Banking & Quant",
         "tech_core": "Composure-Arbitrage Engine",
-        "rate": 0.00,  # Custom Subscription Basis
+        "rate": 0.00,  
         "type": "custom_institutional_subscription",
         "target_margin": 97.1
     },
@@ -53,14 +83,14 @@ PRICING_TIERS = {
     "tier_8": {
         "layer": "Hyper-Scale Compute",
         "tech_core": "Cryogenic Containment Shields",
-        "rate": 0.00,  # Enterprise Contracts
+        "rate": 0.00,  
         "type": "custom_hyperscaler_contract",
         "target_margin": 93.8
     },
     "tier_9": {
         "layer": "Precision Ag",
         "tech_core": "Moisture-Adaptive Hydrogels",
-        "rate": 45000.00,
+        "rate": 4500.00,
         "type": "monthly_grower_retainer",
         "target_margin": 84.3
     },
