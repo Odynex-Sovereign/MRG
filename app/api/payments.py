@@ -1,54 +1,44 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import FastAPI, Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import Dict, Any
-from services.checkout_engine import UnifiedCheckoutEngine
+from services.tier_orchestrator import ComprehensiveTierOrchestrator
 
-router = APIRouter(prefix="/api/payments", tags=["Payments"])
+# Ensure your global FastAPI app instance exists
+app = FastAPI(title="MRG Integrated Simulation Grid Engine")
 
-# Re-use engine instance across routes
-def get_checkout_engine() -> UnifiedCheckoutEngine:
-    return UnifiedCheckoutEngine()
+# Dependency injector to bind your database pool to the Tier Orchestrator
+def get_tier_orchestrator() -> ComprehensiveTierOrchestrator:
+    from app import db_client # Points to your global asyncpg database client object
+    return ComprehensiveTierOrchestrator(db_client=db_client)
 
-class PayPalCheckoutRequest(BaseModel):
-    amount: float
-    payment_method_nonce: str
+class DeployGridRequest(BaseModel):
+    client_id: str
+    node_count: int
 
-@router.get("/paypal-token", response_model=Dict[str, str])
-async def get_paypal_token(engine: UnifiedCheckoutEngine = Depends(get_checkout_engine)):
-    """
-    Generates a secure client token to initialization PayPal components safely on the frontend.
-    """
-    token = await engine.generate_paypal_client_token()
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="PayPal/Braintree processing layer is unconfigured or offline."
-        )
-    return {"client_token": token}
-
-@router.post("/paypal-checkout", response_model=Dict[str, Any])
-async def paypal_checkout(
-    payload: PayPalCheckoutRequest,
-    engine: UnifiedCheckoutEngine = Depends(get_checkout_engine)
+@app.post("/api/tiers/verify-deploy")
+async def verify_grid_deployment(
+    request: DeployGridRequest, 
+    orchestrator: ComprehensiveTierOrchestrator = Depends(get_tier_orchestrator)
 ):
     """
-    Receives the authorization nonce from the client window and executes the charge legally.
+    Enforces subscription gates before spawning new simulation nodes.
+    Protects compute resources across your 5 Fly Machines.
     """
-    if payload.amount <= 0:
+    # 1. Verify user profile and safety configurations
+    safety_profile = await orchestrator.verify_action_safety(request.client_id)
+    
+    # 2. Gate execution boundaries based on visual limitations matrix
+    tier_key = safety_profile["tier"]
+    allowed_nodes = orchestrator.tiers[tier_key].max_visual_nodes
+    
+    if request.node_count > allowed_nodes:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Transaction amount must be greater than zero."
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail=f"Deployment capped. {tier_key.upper()} profiles are limited to {allowed_nodes} active visual nodes."
         )
-
-    result = await engine.process_paypal_sale(
-        amount=payload.amount,
-        payment_method_nonce=payload.payment_method_nonce
-    )
-
-    if result["status"] == "success":
-        return result
         
-    raise HTTPException(
-        status_code=status.HTTP_402_PAYMENT_REQUIRED,
-        detail=result.get("error", "Transaction declined by alternative gateway.")
-    )
+    return {
+        "status": "authorized",
+        "enforce_strict_privacy": safety_profile["enforce_strict_privacy"],
+        "max_capacity": allowed_nodes
+ }
