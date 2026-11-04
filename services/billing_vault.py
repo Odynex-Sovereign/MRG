@@ -14,8 +14,8 @@ class MarketSplitPayload(BaseModel):
 
 class AdvancedFinancialRouter:
     """
-    Orchestrates B2B market revenue splits, API developer token consumption, 
-    and multi-channel financial routing across the 5 running cloud host nodes.
+    Orchestrates headless developer API token verification loops, pre-funded balances,
+    and automatic 20% infrastructure cuts across active marketplace scenarios.
     """
     def __init__(self, db_client):
         self.db = db_client
@@ -25,33 +25,27 @@ class AdvancedFinancialRouter:
 
     async def execute_marketplace_split_transaction(self, tx: MarketSplitPayload) -> Dict[str, Any]:
         """
-        1. THE PLATFORM EXTRACTOR ENGINE
-        Uses Stripe Connect to execute automated revenue splits. Captures a 20% infrastructure
-        fee and sends the remaining balance directly to the creator's merchant account.
+        1. THE PLATFORM SPLIT ENGINE
+        Uses Stripe Connect to execute automated marketplace cuts at the network edge.
         """
         platform_fee_cents = int((tx.total_amount_usd * 0.20) * 100)
         total_cents = int(tx.total_amount_usd * 100)
         
         try:
-            # Charge buyer and split the funds at the network edge automatically
             intent = stripe.PaymentIntent.create(
                 amount=total_cents,
                 currency="usd",
                 payment_method=tx.stripe_payment_method_id,
                 confirm=True,
                 application_fee_amount=platform_fee_cents,
-                transfer_data={
-                    "destination": tx.creator_id, # Connected custom consultant vendor ID account
-                },
+                transfer_data={"destination": tx.creator_id},
                 automatic_payment_methods={"enabled": True, "allow_redirects": "never"}
             )
             
-            # Log split transaction directly to your core PostgreSQL data pool ledger
             await self.db.execute(
                 "INSERT INTO billing_vault (client_id, ledger_balance, active) VALUES ($1, $2, True)",
                 tx.buyer_id, tx.total_amount_usd
             )
-            
             return {
                 "status": "settled",
                 "payment_intent_id": intent.id,
@@ -63,13 +57,12 @@ class AdvancedFinancialRouter:
 
     async def charge_headless_api_token_consumption(self, developer_key: str, data_packets_processed: int) -> Dict[str, Any]:
         """
-        2. THE DEVELOPER API GATE ENGINE
-        Charges third-party applications for running headless API calls against your simulation engines.
+        2. HEADLESS API MARGIN ENFORCER
+        Debits pre-funded developer balances for running raw data pipeline calls.
         """
-        wholesale_rate_per_packet = 0.0004  # Custom billing rate fraction
+        wholesale_rate_per_packet = 0.0004  # Custom billing markup fraction
         total_accrued_bill = data_packets_processed * wholesale_rate_per_packet
         
-        # Deduct directly from pre-funded developer balances in the ledger database pool
         await self.db.execute(
             "UPDATE billing_vault SET ledger_balance = ledger_balance - $1 WHERE client_id = "
             "(SELECT client_id FROM api_keys WHERE token_hash = $2)",
@@ -79,13 +72,12 @@ class AdvancedFinancialRouter:
 
     async def settle_digital_asset_invoice(self, client_id: str, amount_usdc: float, block_tx_hash: str) -> bool:
         """
-        3. THE DIGITAL ASSET SETTLEMENT ENGINE
-        Validates cross-border B2B digital wallet allocations to bypass high international credit card fees.
+        3. GLOBAL DIGITAL WALLET SETTLEMENT
+        Bypasses traditional card processor overhead using stablecoin settlement logs.
         """
-        # Record direct wallet deposits cleanly into the Postgres cluster ledger state
         await self.db.execute(
             "INSERT INTO billing_vault (client_id, ledger_balance, active) VALUES ($1, $2, True)",
             client_id, amount_usdc
         )
-        logger.info(f"[Digital Asset Settle] Credited {amount_usdc} USDC to user {client_id} via hash {block_tx_hash[:10]}")
+        logger.info(f"[Digital Asset Settle] Credited {amount_usdc} USDC to ledger user {client_id}")
         return True
