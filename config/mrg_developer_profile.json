@@ -1,0 +1,26 @@
+{
+  "mrg_api_configuration": {
+    "environment": "production",
+    "base_url": "https://fly.dev",
+    "developer_credentials": {
+      "client_id": "dev_cluster_node_georgia_east",
+      "developer_secret_key": "mrg_live_sk_88c9859efe47af098d5751803b7b6e83"
+    },
+    "connection_settings": {
+      "request_timeout_seconds": 30,
+      "max_retry_attempts": 3,
+      "enable_asynchronous_parallel_tensor_streaming": true
+    },
+    "headless_telemetry_billing_gates": {
+      "auto_replenish_balance": true,
+      "minimum_wallet_threshold_usd": 5.00,
+      "pre_funded_payment_method": "stripe_connect_vault",
+      "estimated_wholesale_tariff_per_frame_usd": 0.0004
+    },
+    "active_simulation_subscriptions": [
+      "texas_bitcoin_energy",
+      "swga_agribusiness",
+      "mr_auto_04_upgrade"
+    ]
+  }
+}
