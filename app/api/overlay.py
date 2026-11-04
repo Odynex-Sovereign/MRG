@@ -14,3 +14,7 @@ async def get_metrics_stream(db = Depends(get_db_client)):
     """Fetches a real-time, non-persisted federation frame to update client charts."""
     orchestrator = VirtualDataFederationOverlay(db_client=db)
     return await orchestrator.generate_federated_analytics_map()
+from app.api import scenarios as scenario_router
+
+# Include your expanded dynamic scenarios router schema alongside existing layers
+app.include_router(scenario_router.router)
