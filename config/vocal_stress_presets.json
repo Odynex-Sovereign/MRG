@@ -1,0 +1,29 @@
+{
+  "vocal_stress_analysis_engine": {
+    "sampling_rate_hz": 48000,
+    "channels": 1,
+    "feature_extraction": {
+      "fundamental_frequency_tracking": true,
+      "micro_tremor_frequency_range_hz": [5.0, 12.0],
+      "jitter_threshold_percentage": 1.25,
+      "shimmer_threshold_db": 0.35
+    },
+    "stress_classification_matrix": {
+      "baseline_composure": {
+        "micro_tremor_amplitude": "0.00-0.15",
+        "vocal_pitch_variance_semitones": "0.0-1.5",
+        "system_action": "LOG_NORMAL_TELEMETRY"
+      },
+      "elevated_anxiety": {
+        "micro_tremor_amplitude": "0.16-0.55",
+        "vocal_pitch_variance_semitones": "1.6-3.8",
+        "system_action": "INJECT_SECONDARY_SCENARIO_LOGISTICS_SHOCK"
+      },
+      "panic_threshold": {
+        "micro_tremor_amplitude": "> 0.55",
+        "vocal_pitch_variance_semitones": "> 3.8",
+        "system_action": "TRIGGER_OUT_OF_BAND_TWILIO_ALERT_OVERRIDE"
+      }
+    }
+  }
+}
