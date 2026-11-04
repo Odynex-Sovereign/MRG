@@ -1,11 +1,16 @@
 import json
 import logging
 from pathlib import Path
+from typing import Any
 
 from fastapi import Depends, FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
+
+try:
+    from sqlalchemy.orm import Session
+except ImportError:  # A sandbox/startup environment may not have SQLAlchemy installed yet.
+    Session = Any
 
 # Optional infrastructure integrations must not prevent sandbox startup.
 try:
