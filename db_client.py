@@ -1,16 +1,26 @@
-# database/db_client.py
 import os
+
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mrg_simulation")
+DATABASE_URL = os.getenv("DATABASE_URL")
+
 
 def get_db_connection():
-    try:
-        return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-    except Exception as e:
-        print(f"Database abstraction connection failure: {e}")
+    """Connect only when a database is configured; sandbox mode needs no DB."""
+    if not DATABASE_URL:
         return None
+
+    try:
+        return psycopg2.connect(
+            DATABASE_URL,
+            cursor_factory=RealDictCursor,
+            connect_timeout=3,
+        )
+    except psycopg2.Error as exc:
+        print(f"Database connection unavailable: {exc}")
+        return None
+
 
 def init_base_tables():
     commands = (
@@ -42,35 +52,34 @@ def init_base_tables():
             decision_velocity NUMERIC(7,2),
             logged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """
+        """,
     )
     conn = get_db_connection()
-    if conn:
-        try:
-            with conn.cursor() as cur:
-                for command in commands:
-                    cur.execute(command)
-            conn.commit()
-            print("Successfully executed base and billing subscription migrations.")
-        except Exception as e:
-            print(f"Failed to execute schema layout: {e}")
-        finally:
-            conn.close()
+    if conn is None:
+        print("Database is not configured or unavailable; skipping schema initialization.")
+        return
+
+    try:
+        with conn.cursor() as cur:
+            for command in commands:
+                cur.execute(command)
+        conn.commit()
+        print("Successfully executed base and billing subscription migrations.")
+    except psycopg2.Error as exc:
+        conn.rollback()
+        print(f"Failed to execute schema layout: {exc}")
+    finally:
+        conn.close()
+
 
 def get_db():
-    """
-    FastAPI dependency that yields a live connection when possible,
-    otherwise yields None so the application can still boot in sandbox mode.
-    """
+    """Yield a database connection when configured, otherwise None for sandbox mode."""
     conn = get_db_connection()
     try:
         yield conn
     finally:
         if conn is not None:
-            try:
-                conn.close()
-            except Exception:
-                pass
+            conn.close()
 
 
 if __name__ == "__main__":
