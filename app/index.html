@@ -1,98 +1,97 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MRG Suite — Institutional Matrix Allocation</title>
-    <style>
-        :root { --bg: #09090b; --card: #18181b; --text: #f4f4f5; --accent: #22c55e; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; text-align: center; }
-        h1 { font-size: 2.5rem; margin-bottom: 10px; font-weight: 800; letter-spacing: -0.05em; }
-        p { color: #a1a1aa; margin-bottom: 40px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 1100px; margin: 0 auto; }
-        .card { background: var(--card); border: 1px solid #27272a; padding: 32px; border-radius: 12px; text-align: left; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s; }
-        .card:hover { transform: translateY(-4px); border-color: #3f3f46; }
-        .tier-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; }
-        .price { font-size: 2rem; font-weight: 800; margin: 16px 0; color: var(--accent); }
-        .price span { font-size: 1rem; color: #a1a1aa; font-weight: 400; }
-        .features { list-style: none; padding: 0; margin: 0 0 32px 0; font-size: 0.9rem; color: #d4d4d8; line-items: 1.6; }
-        .features li::before { content: "✓ "; color: var(--accent); margin-right: 8px; font-weight: bold; }
-        .btn { display: block; text-align: center; background: var(--text); color: var(--bg); font-weight: 600; padding: 12px; border-radius: 6px; text-decoration: none; cursor: pointer; transition: background 0.2s; }
-        .btn:hover { background: #e4e4e7; }
-        .btn-featured { background: var(--accent); color: white; }
-        .btn-featured:hover { background: #16a34a; }
-    </style>
-</head>
-<body>
+<!-- Load Braintree Web SDK Architecture Components -->
+<script src="https://braintreegateway.com"></script>
+<script src="https://braintreegateway.com"></script>
 
-    <h1>Institutional Matrix Allocation</h1>
-    <p>Select your operational footprint to provision planet-scale crisis simulation grids instantly.</p>
+<!-- The Alternative Checkout Container Space -->
+<div id="mrg-checkout-container" style="max-width: 400px; margin: 20px auto; text-align: center;">
+    <h3>Select Alternative Checkout Option</h3>
+    <div id="paypal-button-target"></div>
+    <div id="payment-status-message" style="margin-top: 15px; font-weight: bold;"></div>
+</div>
 
-    <div class="grid">
-        <!-- Tier 1 -->
-        <div class="card">
-            <div>
-                <div class="tier-name">Molecular SaaS</div>
-                <div class="price">$15,000<span>/mo</span></div>
-                <ul class="features">
-                    <li>Generative Discovery NIM Access</li>
-                    <li>Batched Conformer Engine</li>
-                    <li>96.5% Target Margin Model</li>
-                </ul>
-            </div>
-            <div class="btn" onclick="initializeCheckout('tier_1')">Deploy License</div>
-        </div>
+<script>
+async function initializeAlternativeCheckout() {
+    const statusDiv = document.getElementById('payment-status-message');
+    const simulationCost = 499.00; // Define variable simulation bundle cost rate dynamically
 
-        <!-- Tier 2 -->
-        <div class="card">
-            <div>
-                <div class="tier-name">Infrastructure Base</div>
-                <div class="price">$35,000<span>/mo</span></div>
-                <ul class="features">
-                    <li>Adaptive Structural Subgrades</li>
-                    <li>Regional Base Entitlements</li>
-                    <li>Subsurface Stabilization Framework</li>
-                </ul>
-            </div>
-            <div class="btn" onclick="initializeCheckout('tier_2')">Deploy License</div>
-        </div>
+    try {
+        // 1. Request secure client authorization token from FastAPI backend
+        const tokenResponse = await fetch('/api/payments/paypal-token');
+        if (!tokenResponse.ok) throw new Error("Could not fetch secure initialization credentials.");
+        const { client_token } = await tokenResponse.json();
 
-        <!-- Tier 3 -->
-        <div class="card">
-            <div>
-                <div class="tier-name">Platinum CAVE</div>
-                <div class="price">$160,000<span>/mo</span></div>
-                <ul class="features">
-                    <li>Omniverse CloudXR Matrix Sync</li>
-                    <li>Headset-Free Multi-User Environments</li>
-                    <li>Vocal Stress Response Analytics</li>
-                </ul>
-            </div>
-            <div class="btn btn-featured" onclick="initializeCheckout('tier_3')">Deploy Master Suite</div>
-        </div>
-    </div>
+        // 2. Initialize Braintree Core SDK Instance
+        const clientInstance = await new Promise((resolve, reject) => {
+            braintree.client.create({ authorization: client_token }, (err, inst) => err ? reject(err) : resolve(inst));
+        });
 
-    <script>
-        async function initializeCheckout(tierId) {
-            // Generate a random mock session tracking identifier for testing
-            const targetSession = "session_" + Math.random().toString(36).substring(2, 9);
-            
-            try {
-                const response = await fetch('/billing/v1/checkout/create-session', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session_id: targetSession, tier_id: tierId })
+        // 3. Initialize PayPal Smart Buttons Layer
+        const paypalInstance = await new Promise((resolve, reject) => {
+            braintree.paypalCheckout.create({ client: clientInstance }, (err, inst) => err ? reject(err) : resolve(inst));
+        });
+
+        // 4. Render the official button interface into user layout space
+        paypal.Button.render({
+            env: 'sandbox', // Toggle to 'production' via client variables when live
+            style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
+
+            payment: function () {
+                return paypalInstance.createPayment({
+                    flow: 'checkout',
+                    amount: simulationCost,
+                    currency: 'USD',
+                    intent: 'capture'
                 });
-                const data = await response.json();
-                if (data.checkout_url) {
-                    window.location.href = data.checkout_url;
-                } else {
-                    alert('Configuration Error: Unable to build checkout session loop.');
-                }
-            } catch (err) {
-                console.error('Network Error:', err);
+            },
+
+            onAuthorize: function (data, actions) {
+                return paypalInstance.tokenizePayment(data, async function (err, payload) {
+                    if (err) {
+                        statusDiv.innerText = "Authorization handling token failure.";
+                        return;
+                    }
+                    
+                    statusDiv.innerText = "Verifying funds with banking network...";
+                    
+                    // 5. Securely dispatch single-use nonce back to server to finalize the sale
+                    const paymentResult = await fetch('/api/payments/paypal-checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            amount: simulationCost,
+                            payment_method_nonce: payload.nonce
+                        })
+                    });
+
+                    const checkoutState = await paymentResult.json();
+                    if (paymentResult.ok && checkoutState.status === 'success') {
+                        statusDiv.style.color = "green";
+                        statusDiv.innerText = `Transaction Success! ID: ${checkoutState.transaction_id}`;
+                        // Redirect client or unlock simulation sectors here
+                    } else {
+                        statusDiv.style.color = "red";
+                        statusDiv.innerText = `Payment Refused: ${checkoutState.detail}`;
+                    }
+                });
+            },
+
+            onCancel: function () {
+                statusDiv.innerText = "Checkout pipeline aborted by user.";
+            },
+
+            onError: function (err) {
+                statusDiv.innerText = "A hardware interface processing loop fault occurred.";
+                console.error(err);
             }
-        }
-    </script>
-</body>
-</html>
+        }, '#paypal-button-target');
+
+    } catch (error) {
+        statusDiv.style.color = "red";
+        statusDiv.innerText = "Failed to launch alternative billing window loop UI.";
+        console.error(error);
+    }
+}
+
+// Fire rendering sequence on page layout frame readiness
+document.addEventListener("DOMContentLoaded", initializeAlternativeCheckout);
+        </script>
