@@ -1,6 +1,5 @@
 # database/db_client.py
 import os
-from contextlib import contextmanager
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
@@ -8,10 +7,9 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localho
 
 def get_db_connection():
     try:
-        conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-        return conn
+        return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
     except Exception as e:
-        print(f"Database extraction connection failure: {e}")
+        print(f"Database abstraction connection failure: {e}")
         return None
 
 def init_base_tables():
@@ -22,6 +20,18 @@ def init_base_tables():
             vertical VARCHAR(100) NOT NULL,
             composure_baseline NUMERIC(5,2) DEFAULT 100.00,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS billing_subscriptions (
+            subscription_id SERIAL PRIMARY KEY,
+            session_id VARCHAR(255) REFERENCES simulation_sessions(session_id) ON DELETE CASCADE,
+            platform_tier VARCHAR(100) NOT NULL,
+            pricing_architecture VARCHAR(255) NOT NULL,
+            billing_value NUMERIC(12,2) NOT NULL,
+            target_margin_pct NUMERIC(4,1) NOT NULL,
+            is_active BOOLEAN DEFAULT TRUE,
+            activated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """,
         """
@@ -41,7 +51,7 @@ def init_base_tables():
                 for command in commands:
                     cur.execute(command)
             conn.commit()
-            print("Successfully executed base table migrations.")
+            print("Successfully executed base and billing subscription migrations.")
         except Exception as e:
             print(f"Failed to execute schema layout: {e}")
         finally:
