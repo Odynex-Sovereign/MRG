@@ -57,3 +57,13 @@ async def launch_passive_income_acquisition():
     )
     asyncio.create_task(crawler.start_autonomous_acquisition_loop())
     logger.info("[MRG Cluster] Version 39 autonomous procurement loops initialized.")
+from services.yield_arbitrage import ComputeYieldArbitrageEngine
+
+@app.on_event("startup")
+async def initialize_high_frequency_monetization():
+    # Instantiate the complete real-time yield optimizer
+    yield_engine = ComputeYieldArbitrageEngine(db_client=db_client)
+    
+    # Launch the task loop asynchronously separate from standard web traffic threads
+    asyncio.create_task(yield_engine.start_high_frequency_yield_loop())
+    logger.info("[MRG Cluster] High-frequency telemetry yield loops are live.")
