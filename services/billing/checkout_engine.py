@@ -1,66 +1,120 @@
-import os
+import logging
+from typing import Dict, Any, Optional
+import stripe
+import braintree
+from app.config import settings
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+logger = logging.getLogger("mrg.services.checkout_engine")
 
-router = APIRouter(prefix="/v1/checkout", tags=["revenue"])
+class UnifiedCheckoutEngine:
+    """
+    Legally handles multi-gateway transaction routing for the MRG suite.
+    Binds Stripe and Braintree (PayPal/Venmo) under a clean processing interface.
+    """
+    def __init__(self):
+        # 1. Initialize Stripe Configuration
+        self.stripe_api_key = getattr(settings, "STRIPE_API_KEY", None)
+        if self.stripe_api_key:
+            stripe.api_key = self.stripe_api_key
+            self.stripe_active = True
+        else:
+            logger.warning("[MRG Checkout] Stripe API key missing. Stripe processing disabled.")
+            self.stripe_active = False
 
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "mock_key_for_sandbox")
+        # 2. Initialize Braintree/PayPal Configuration
+        self.braintree_env = getattr(settings, "BRAINTREE_ENVIRONMENT", "sandbox")
+        self.merchant_id = getattr(settings, "BRAINTREE_MERCHANT_ID", None)
+        self.public_key = getattr(settings, "BRAINTREE_PUBLIC_KEY", None)
+        self.private_key = getattr(settings, "BRAINTREE_PRIVATE_KEY", None)
 
+        if all([self.merchant_id, self.public_key, self.private_key]):
+            is_prod = self.braintree_env.lower() == "production"
+            self.braintree_gateway = braintree.BraintreeGateway(
+                braintree.Configuration(
+                    environment=braintree.Environment.Production if is_prod else braintree.Environment.Sandbox,
+                    merchant_id=self.merchant_id,
+                    public_key=self.public_key,
+                    private_key=self.private_key
+                )
+            )
+            self.braintree_active = True
+        else:
+            logger.warning("[MRG Checkout] Braintree credentials incomplete. PayPal processing disabled.")
+            self.braintree_active = False
 
-class CheckoutRequest(BaseModel):
-    session_id: str
-    tier_id: str
+    # ==========================================
+    # STRIPE GATEWAY OPERATIONS
+    # ==========================================
+    async def create_stripe_checkout_session(self, price_id: str, client_id: str, success_url: str, cancel_url: str) -> Dict[str, Any]:
+        """
+        Generates a legally compliant hosted Stripe Checkout checkout session.
+        Deflects card handling compliance away from local Fly machines.
+        """
+        if not self.stripe_active:
+            return {"status": "error", "message": "Stripe processing layer is currently unconfigured."}
 
+        try:
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price': price_id,
+                    'quantity': 1,
+                }],
+                mode='subscription' if "sub" in price_id else 'payment',
+                client_reference_id=client_id,
+                success_url=success_url,
+                cancel_url=cancel_url,
+            )
+            return {"status": "success", "url": session.url, "session_id": session.id}
+        except Exception as e:
+            logger.error(f"[Stripe Error] Failed to spin up checkout vault path: {str(e)}")
+            return {"status": "error", "message": str(e)}
 
-@router.post("/create-session")
-async def create_checkout_session(payload: CheckoutRequest):
-    """Build a checkout link for an MRG subscription tier."""
-    if STRIPE_SECRET_KEY == "mock_key_for_sandbox":
-        return {
-            "checkout_url": f"https://stripe.com_{payload.session_id}",
-            "mode": "sandbox",
-            "message": "Sandbox mode: Stripe key not configured",
-        }
+    # ==========================================
+    # BRAINTREE / PAYPAL GATEWAY OPERATIONS
+    # ==========================================
+    async def generate_paypal_client_token(self) -> Optional[str]:
+        """
+        Generates a token required by the frontend client to securely initialization
+        the PayPal/Venmo interface without exposing credentials.
+        """
+        if not self.braintree_active:
+            return None
+        try:
+            return self.braintree_gateway.client_token.generate()
+        except Exception as e:
+            logger.error(f"[Braintree Error] Failed to build client initialization token: {str(e)}")
+            return None
 
-    import stripe
+    async def process_paypal_sale(self, amount: float, payment_method_nonce: str) -> Dict[str, Any]:
+        """
+        Legally settles alternative currency transactions.
+        Uses single-use payment nonces to securely move funds from a client wallet.
+        """
+        if not self.braintree_active:
+            return {"status": "error", "message": "Braintree/PayPal processing layer unconfigured."}
 
-    stripe.api_key = STRIPE_SECRET_KEY
-    price_catalog = {
-        "tier_1": {"amount": 1500000, "name": "Molecular SaaS Commercial License"},
-        "tier_2": {"amount": 3500000, "name": "Infrastructure Regional Base License"},
-        "tier_3": {"amount": 16000000, "name": "Platinum CAVE Master Sync"},
-        "tier_5": {"amount": 8500000, "name": "Commodities Tracking Retainer"},
-        "tier_7": {"amount": 11500000, "name": "Autonomous Aquatics Logistics License"},
-        "tier_9": {"amount": 450000, "name": "Precision Ag Grower Software Retainer"},
-        "tier_starter": {"amount": 4900, "name": "Solo Practitioner License"},
-        "tier_growth": {"amount": 49900, "name": "Emerging Team License"},
-    }
+        try:
+            result = self.braintree_gateway.transaction.sale({
+                "amount": f"{amount:.2f}",
+                "payment_method_nonce": payment_method_nonce,
+                "options": {
+                    "submit_for_settlement": True
+                }
+            })
 
-    tier_info = price_catalog.get(payload.tier_id)
-    if not tier_info:
-        raise HTTPException(
-            status_code=400,
-            detail="Requested tier requires a custom enterprise retainer contract.",
-        )
-
-    try:
-        session = stripe.checkout.Session.create(
-            payment_method_types=["card"],
-            line_items=[{
-                "price_data": {
-                    "currency": "usd",
-                    "product_data": {"name": tier_info["name"]},
-                    "unit_amount": tier_info["amount"],
-                    "recurring": {"interval": "month"},
-                },
-                "quantity": 1,
-            }],
-            mode="subscription",
-            metadata={"session_id": payload.session_id, "tier_id": payload.tier_id},
-            success_url="https://fly.dev/" + payload.session_id,
-            cancel_url="https://fly.dev",
-        )
-        return {"checkout_url": session.url}
-    except Exception as exc:  # pragma: no cover - external Stripe integration
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+            if result.is_success:
+                logger.info(f"[MRG PayPal Success] Settled transaction: {result.transaction.id}")
+                return {
+                    "status": "success",
+                    "transaction_id": result.transaction.id,
+                    "method": result.transaction.payment_instrument_type,
+                    "amount": float(result.transaction.amount)
+                }
+            else:
+                logger.error(f"[MRG PayPal Denied] Refused transaction processing: {result.message}")
+                return {"status": "failed", "error": result.message}
+                
+        except Exception as e:
+            logger.error(f"[Braintree Exception] Processing loop execution fault: {str(e)}")
+            return {"status": "error", "message": str(e)}
