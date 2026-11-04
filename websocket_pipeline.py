@@ -1,117 +1,88 @@
 # services/streaming/websocket_pipeline.py
-import json
 import asyncio
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
-from config.billing_catalog import PRICING_TIERS
-from database.db_client import get_db_connection
-from services.marketing.growth_loops import ViralGrowthEngine
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
+from typing import Dict, Any
+from pydantic import BaseModel
 
-app = FastAPI(title="MRG Self-Marketing Planet-Scale Suite", version="1.3.0")
+app = FastAPI(title="MRG Crisis Simulation Grid - Premium Tier")
 
-# Establish Global CORS Controls for Client Framework Integrations
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Define the sensory structure expected by Apple VisionOS / Meta Presence Platform SDK shims
+class SensoryPacket(BaseModel):
+    haptic_frequency: float  # Hz (0.0 to 250.0)
+    haptic_intensity: float  # Amplitude (0.0 to 1.0)
+    scent_profile_id: str    # Universal Scent Manifest Matrix ID
+    concentration_ppm: float # Scent saturation density
 
-# 1. Mount the High-Frequency Ingestion Stripe Webhook App Space
-from services.billing.stripe_webhooks import app as stripe_webhook_router
-app.mount("/billing", stripe_webhook_router)
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[str, WebSocket] = {}
+        self.sensory_queues: Dict[str, asyncio.Queue] = {}
 
-# 2. Include the Stripe Self-Serve Link Generation Router Engine
-from services.billing.checkout_engine import router as checkout_router
-app.include_router(checkout_router, prefix="/billing")
+    async def connect(self, session_id: str, websocket: WebSocket, user_tier: str):
+        await websocket.accept()
+        self.active_connections[session_id] = websocket
+        if user_tier == "Premium_Research":
+            self.sensory_queues[session_id] = asyncio.Queue(maxsize=150)
 
+    def disconnect(self, session_id: str):
+        self.active_connections.pop(session_id, None)
+        self.sensory_queues.pop(session_id, None)
 
-def verify_tier_access(session_id: str) -> dict:
+    async def push_sensory(self, session_id: str, packet: SensoryPacket):
+        # Enqueue sensory data asynchronously without blocking the cognitive loops
+        if session_id in self.sensory_queues:
+            try:
+                self.sensory_queues[session_id].put_nowait(packet)
+            except asyncio.QueueFull:
+                pass # Gracefully drop overflow packets if hardware channel experiences jitter
+
+manager = ConnectionManager()
+
+async def sensory_streaming_worker(session_id: str, websocket: WebSocket):
     """
-    Queries the database pool to confirm if a session identifier holds
-    an active, validly funded subscription license tier footprint.
+    Dedicated worker that unloads sensory metrics from the queue 
+    and broadcasts them to the spatial computing client.
     """
-    conn = get_db_connection()
-    if not conn:
-        return {"status": "sandbox_bypass", "tier": "tier_1"}
-    try:
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT platform_tier FROM billing_subscriptions WHERE session_id = %s AND is_active = TRUE",
-                (session_id,)
-            )
-            row = cur.fetchone()
-            if row:
-                return {"status": "verified", "tier": row["platform_tier"]}
-    except Exception as e:
-        print(f"Error querying subscription state: {e}")
-    finally:
-        conn.close()
-    return {"status": "unlicensed_fallback", "tier": "tier_1"}
-
-
-@app.websocket("/ws/simulation/{session_id}")
-async def websocket_endpoint(websocket: WebSocket, session_id: str):
-    """
-    High-frequency sub-50ms real-time communication pipeline.
-    Gated cleanly by billing subscription lookup validation models.
-    """
-    await websocket.accept()
-    
-    # Licensing Evaluation Gateway
-    access_profile = verify_tier_access(session_id)
-    tier_meta = PRICING_TIERS.get(access_profile["tier"], PRICING_TIERS["tier_1"])
-    
-    await websocket.send_json({
-        "event": "connected",
-        "session_id": session_id,
-        "license_tier": access_profile["tier"],
-        "operational_layer": tier_meta["layer"]
-    })
-    
-    last_calculated_composure = 100.0
-    vertical_context = "Corporate"
-    
+    queue = manager.sensory_queues.get(session_id)
+    if not queue:
+        return
     try:
         while True:
-            data = await websocket.receive_text()
-            payload = json.loads(data)
-            
-            if payload.get("event") == "set_context":
-                vertical_context = payload.get("vertical", "Corporate")
-                continue
-                
-            vocal_stress = payload.get("vocal_stress", 0.0)
-            decision_velocity = payload.get("decision_velocity", 1.0)
-            
-            # Algorithmic Behavior Matrix Engine Calculation
-            last_calculated_composure = max(0.0, min(100.0, 100.0 - (vocal_stress * 50.0) - (decision_velocity * 2.0)))
-            
-            # Persist raw tracking metrics into local instances if connected
-            conn = get_db_connection()
-            if conn:
-                try:
-                    with conn.cursor() as cur:
-                        query = "INSERT INTO telemetry_logs (session_id, vocal_stress, decision_velocity) VALUES (%s, %s, %s)"
-                        cur.execute(query, (session_id, vocal_stress, decision_velocity))
-                    conn.commit()
-                    conn.close()
-                except Exception as db_err:
-                    pass  # Gracefully fall back if database connection is busy
-
+            packet = await queue.get()
             await websocket.send_json({
-                "event": "telemetry_ack",
-                "calculated_composure": last_calculated_composure
+                "event": "SENSORY_TELEMETRY",
+                "data": packet.model_dump()
             })
-            await asyncio.sleep(0.01)
+            queue.task_done()
+    except (WebSocketDisconnect, asyncio.CancelledError):
+        pass
+
+@app.websocket("/ws/simulation/{session_id}")
+async def websocket_simulation_endpoint(websocket: WebSocket, session_id: str, user_tier: str = "Standard"):
+    await manager.connect(session_id, websocket, user_tier)
+    
+    # Spawn background task for multi-sensory telemetry if premium
+    worker_task = None
+    if user_tier == "Premium_Research":
+        worker_task = asyncio.create_task(sensory_streaming_worker(session_id, websocket))
+        
+    try:
+        while True:
+            # Handle inbound control frames or mic streaming from standard client pipeline
+            data = await websocket.receive_json()
             
+            # --- Simulated Cognitive/Sensory Loop Internal Trigger ---
+            # If system detects a physical crisis event, calculate metrics and push:
+            if data.get("action") == "trigger_crisis_event":
+                mock_packet = SensoryPacket(
+                    haptic_frequency=145.5,
+                    haptic_intensity=0.85,
+                    scent_profile_id=data.get("scent_trigger", "NONE"),
+                    concentration_ppm=12.5
+                )
+                await manager.push_sensory(session_id, mock_packet)
+                
     except WebSocketDisconnect:
-        # PRODUCT-LED GROWTH LOOP VIA CRISIS SCORECARD VIRALITY ENGINE
-        # Generates free auto-marketing share links back to colleagues when an executive exits
-        growth_card = ViralGrowthEngine.generate_viral_scorecard(
-            session_id=session_id, 
-            composure_score=round(last_calculated_composure, 2), 
-            vertical=vertical_context
-        )
-        print(f"Session disconnected. Auto-marketing viral package initialized for distribution:\n{json.dumps(growth_card, indent=2)}")
+        manager.disconnect(session_id)
+        if worker_task:
+            worker_task.cancel()
