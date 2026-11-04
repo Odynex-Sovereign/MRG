@@ -1,0 +1,19 @@
+{
+  "regional_syndication_matrix": {
+    "georgia_agribusiness_corridor": {
+      "target_counties": ["Dougherty", "Colquitt", "Thomas", "Bainbridge", "Albany"],
+      "localized_keywords": ["SOWEGA", "GeorgiaAg", "ColdChainLogistics", "SupplyChainResilience"],
+      "automated_hashtags": ["#SOWEGA", "#GeorgiaBusiness", "#Agribusiness", "#SupplyChain", "#Logistics"]
+    },
+    "texas_ercot_energy_hub": {
+      "target_cities": ["Dallas", "Houston", "Austin", "Fort Worth"],
+      "localized_keywords": ["ERCOT", "GridCurtailment", "DemandResponse", "BitcoinMiningArbitrage"],
+      "automated_hashtags": ["#ERCOT", "#TexasEnergy", "#GridResilience", "#BitcoinMining", "#ComputeArbitrage"]
+    },
+    "metadata_distribution_rules": {
+      "inject_live_compute_minutes": true,
+      "append_portal_url": "https://fly.dev",
+      "distribution_frequency_hours": 12
+    }
+  }
+}
