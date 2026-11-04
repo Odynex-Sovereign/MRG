@@ -1,44 +1,42 @@
+# fly.toml
+
 app = "mrg"
-primary_region = "dfw"
+primary_region = "atl"
 
 [build]
-  dockerfile = "Dockerfile"
+  image = "registry.fly.io/mrg:deployment-8a707042e108d9ee6cbe136e10ccfc19"
 
-[http_service]
-  internal_port = 8000
-  force_https = true
-  auto_stop_machines = "suspend"
-  auto_start_machines = true
-  min_machines_running = 1
-  processes = ["app"]
+[env]
+  ENVIRONMENT = "production"
+  PORT = "8000"
+  APP_BASE_URL = "https://fly.dev"
 
-[[vm]]
-  memory = "2gb"
-  cpu_kind = "shared"
-  cpus = 2
+# SUCCESSFUL TECH MECHANISM: Automatically updates schemas on every build push
+[deploy]
+  release_command = "python database/db_client.py"
 
 [[services]]
   protocol = "tcp"
   internal_port = 8000
-  processes = ["app"]
 
   [[services.ports]]
-    port = 80
+    force_https = true
     handlers = ["http"]
+    port = 80
 
   [[services.ports]]
-    port = 443
     handlers = ["tls", "http"]
+    port = 443
 
-  [services.concurrency]
+  [[services.concurrency]]
     type = "connections"
-    hard_limit = 100
-    soft_limit = 80
+    hard_limit = 250
+    soft_limit = 200
 
   [[services.http_checks]]
     interval = "10s"
-    timeout = "2s"
-    method = "GET"
+    grace_period = "5s"
+    method = "get"
     path = "/healthz"
     protocol = "http"
-    grace_period = "5s"
+    timeout = "2s"
