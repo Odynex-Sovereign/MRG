@@ -14,9 +14,7 @@ COPY . .
 
 EXPOSE 8000
 
-# Force standard stdout/stderr logs to flush immediately without buffer buffering
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
-# Execute using explicit module execution logic bound to the correct network host interface
 CMD ["python", "-m", "uvicorn", "services.streaming.websocket_pipeline:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug"]
