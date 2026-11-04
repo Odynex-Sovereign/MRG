@@ -35,3 +35,13 @@ elif target_industry == "luxury_fashion":
     return await self.untapped.execute_luxury_fashion_disruption(identity_id)
 elif target_industry == "agritech":
     return await self.untapped.execute_smart_agriculture_anomaly(identity_d)
+from services.scenarios.regional_grids import RegionalGridsEngine
+
+# Inside UniversalScenarioManager __init__:
+self.regional = RegionalGridsEngine(db_client, comms_orchestrator)
+
+# Inside trigger_arbitrary_industry_shock:
+if target_industry == "texas_bitcoin_energy":
+    return await self.regional.execute_texas_ercot_curtailment(identity_id)
+elif target_industry == "swga_agribusiness":
+    return await self.regional.execute_swga_cold_chain_failure(identity_id)
