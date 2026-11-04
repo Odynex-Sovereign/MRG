@@ -77,3 +77,16 @@ async def initialize_corporate_partnerships():
         comms_orchestrator=social_webhook_orchestrator
     )
     logger.info("[MRG Cluster] Version 40 institutional partnership logic arrays initialized.")
+from services.social_syndicator import AutonomousSocialSyndicator
+
+@app.on_event("startup")
+async def initialize_autonomous_marketing():
+    # Instantiate the automated content generation and syndication loop
+    syndicator = AutonomousSocialSyndicator(
+        db_client=db_client,  # Maps to your live asyncpg database connection
+        comms_orchestrator=social_webhook_orchestrator  # Maps to your active webhooks manager
+    )
+    
+    # Fire the loop as a background task completely separate from standard web traffic threads
+    asyncio.create_task(syndicator.start_autonomous_marketing_loop())
+    logger.info("[MRG Cluster] Version 45 high-impact marketing syndication loops are live.")
