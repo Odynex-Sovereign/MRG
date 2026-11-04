@@ -3,44 +3,45 @@ import os
 import httpx
 from typing import Dict, Any
 
-class DeepSeekMacroClient:
+class DeepSeekOrchestrator:
     def __init__(self):
-        self.api_key = os.getenv("DEEPSEEK_API_KEY", "sandbox_key")
-        self.base_url = "https://deepseek.com" # OpenAI-compatible endpoint
-        
-    async def analyze_systemic_ripple(self, vertical: str, context_state: Dict[str, Any]) -> Dict[str, Any]:
-        if self.api_key == "sandbox_key":
-            # Graceful sandbox mode fallback
+        self.api_key = os.getenv("DEEPSEEK_API_KEY")
+        self.endpoint = "https://deepseek.com" # OpenAI-compatible endpoint
+
+    async def generate_crisis_step(self, sector: str, current_state: str) -> Dict[str, Any]:
+        # Handle Sandbox fallback if developer has no active API keys
+        if not self.api_key:
             return {
-                "mode": "sandbox",
-                "macro_cascade": "Sandbox simulation triggered. No deep systemic effects generated.",
-                "severity_index": 0.1
-            }
-            
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        
-        prompt = f"Analyze structural ripple effects for the {vertical} vertical given this data state: {json.dumps(context_state)}"
-        
-        payload = {
-            "model": "deepseek-chat", # DeepSeek-V3 chat identifier
-            "messages": [
-                {"role": "system", "content": "You are the macro-cognitive matrix coordinator for a planet-scale crisis grid."},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.3
-        }
-        
-        async with httpx.AsyncClient() as client:
-            response = await client.post(self.base_url, headers=headers, json=payload, timeout=30.0)
-            if response.status_code == 200:
-                result = response.json()
-                return {
-                    "mode": "production",
-                    "macro_cascade": result["choices"][0]["message"]["content"],
-                    "severity_index": 0.85
+                "cascade_summary": "[SANDBOX MODE] Systemic degradation triggered.",
+                "sensory_telemetry": {
+                    "haptic_frequency": 45.0, "haptic_intensity": 0.3,
+                    "scent_profile_id": "SANDBOX_DEFAULT_00", "concentration_ppm": 1.0
                 }
-            else:
-                raise Exception(f"DeepSeek client failure: {response.status_code} - {response.text}")
+            }
+
+        system_prompt = (
+            "You are the Macro-Cognitive Tier of the MRG Crisis Grid.\n"
+            "You evaluate systemic ripple effects across macroeconomics, industry, and biology.\n"
+            "CRITICAL: You must include a structured 'sensory_telemetry' JSON block mapping the physical reality.\n"
+            "Map physical breakdown to frequency/intensity vectors, and biochemical or ambient states "
+            "to specific alphanumeric scent IDs derived from the system manifest."
+        )
+
+        user_content = f"Sector: {sector}. Current Emergency Vector: {current_state}."
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                self.endpoint,
+                headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": "deepseek-chat", # Maps to DeepSeek-V3
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_content}
+                    ],
+                    "response_format": {"type": "json_object"},
+                    "temperature": 0.3
+                },
+                timeout=30.0
+            )
+            return response.json()
