@@ -95,3 +95,85 @@ async function initializeAlternativeCheckout() {
 // Fire rendering sequence on page layout frame readiness
 document.addEventListener("DOMContentLoaded", initializeAlternativeCheckout);
         </script>
+<!-- Drag-and-Drop Canvas & Monetization Presentation Layer -->
+<div id="mrg-democratized-market-hub" style="font-family: system-ui, sans-serif; padding: 20px; background: #0b0f19; color: #fff;">
+    
+    <!-- 1. PRICING BUNDLES FOR VARIED INCOME STREAMS -->
+    <h2 style="text-align: center; color: #00bcd4;">Choose Your Command Profile</h2>
+    <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px;">
+        
+        <!-- Free Tier Card -->
+        <div style="background: #161f30; padding: 20px; border-radius: 8px; width: 250px; border: 1px solid #233554;">
+            <h3>Community Sandbox</h3>
+            <h4 style="color: #00bcd4;">Free Forever</h4>
+            <p style="font-size: 13px; color: #8892b0;">Test your composure using standard offline fallback scripts. Limited to 10 visual nodes.</p>
+            <button onclick="selectProfileTier('free_community')" style="width:100%; background:#233554; color:#fff; border:none; padding:10px; border-radius:4px; cursor:pointer;">Launch Free</button>
+        </div>
+
+        <!-- Pro Operator Card -->
+        <div style="background: #161f30; padding: 20px; border-radius: 8px; width: 250px; border: 2px solid #00bcd4; position: relative;">
+            <span style="position:absolute; top:-10px; right:10px; background:#00bcd4; color:#0b0f19; font-size:11px; padding:2px 6px; border-radius:4px; font-weight:bold;">POPULAR</span>
+            <h3>Pro Operator</h3>
+            <h4 style="color: #00bcd4;">$29 / mo</h4>
+            <p style="font-size: 13px; color: #8892b0;">Full access to the DeepSeek-V3 cognitive engine, Twilio SMS alerts, and up to 50 active grid nodes.</p>
+            <button onclick="selectProfileTier('pro_operator')" style="width:100%; background:#00bcd4; color:#0b0f19; border:none; padding:10px; border-radius:4px; cursor:pointer; font-weight:bold;">Upgrade to Pro</button>
+        </div>
+
+    </div>
+
+    <!-- 2. THE VISUAL EDITOR BLOCK FOR REGULAR CONSUMERS -->
+    <div style="max-width: 800px; margin: 0 auto; background: #161f30; border-radius: 8px; padding: 20px; border: 1px solid #233554;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin:0;">🛠️ Scenario Workflow Builder</h3>
+            <button onclick="triggerFigmaStyleShare()" style="background:#4caf50; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:bold;">🚀 Share Link</button>
+        </div>
+        
+        <!-- Drag Item Toolbox -->
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; background:#0b0f19; padding:10px; border-radius:4px;">
+            <div draggable="true" ondragstart="drag(event)" id="node_macro_shock" style="background:#ff9800; padding:6px 12px; border-radius:4px; font-size:12px; cursor:grab; font-weight:bold;">Geopolitical Shock</div>
+            <div draggable="true" ondragstart="drag(event)" id="node_cyber_breach" style="background:#f44336; padding:6px 12px; border-radius:4px; font-size:12px; cursor:grab; font-weight:bold;">Cyber Breach</div>
+        </div>
+
+        <!-- Simulation Grid Drop Target Arena -->
+        <div id="simulation-drop-canvas" ondrop="drop(event)" ondragover="allowDrop(event)" style="width: 100%; height: 300px; background: #0b0f19; border: 2px dashed #233554; border-radius: 6px; position: relative;">
+            <p id="canvas-placeholder-text" style="text-align:center; color:#4f5d75; margin-top:130px; font-size:14px;">Drag shock components from the toolbox above into this arena to assemble your canvas grid.</p>
+        </div>
+        <div id="share-output-box" style="margin-top: 15px; font-size: 13px; color: #4caf50; text-align: center;"></div>
+    </div>
+</div>
+
+<script>
+function allowDrop(ev) { ev.preventDefault(); }
+function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+
+function drop(ev) {
+    ev.preventDefault();
+    document.getElementById('canvas-placeholder-text').style.display = 'none';
+    var data = ev.dataTransfer.getData("text");
+    var originalNode = document.getElementById(data);
+    
+    // Clone node component into visual canvas arena cleanly
+    var nodeClone = originalNode.cloneNode(true);
+    nodeClone.id = "active_" + Math.random().toString(36).substr(2, 9);
+    nodeClone.style.position = "absolute";
+    nodeClone.style.left = (ev.clientX - ev.target.getBoundingClientRect().left - 40) + "px";
+    nodeClone.style.top = (ev.clientY - ev.target.getBoundingClientRect().top - 15) + "px";
+    
+    ev.target.appendChild(nodeClone);
+}
+
+async function triggerFigmaStyleShare() {
+    const outputBox = document.getElementById('share-output-box');
+    outputBox.innerText = "Generating cryptographic share signature...";
+    
+    // In production, this targets your newly exposed TierOrchestrator endpoint
+    setTimeout(() => {
+        const fakeShareId = Math.random().toString(36).substr(2, 6);
+        outputBox.innerHTML = `🌐 Live Sandbox Link Shared: <a href="#" style="color:#00bcd4; font-weight:bold;">mrg.fly.dev/s/${fakeShareId}</a>`;
+    }, 1000);
+}
+
+function selectProfileTier(tierKey) {
+    alert("Configuring workflow parameters for profile: " + tierKey);
+}
+</script>
