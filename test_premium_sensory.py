@@ -1,25 +1,26 @@
-# tests/test_premium_sensory.py
-import pytest
 from fastapi.testclient import TestClient
-from services.streaming.websocket_pipeline import app
 
-def test_seamless_premium_sensory_degradation():
-    client = TestClient(app)
-    
-    # Test Standard Tier connection: Ensure it loads normally and ignores extra sensory threads
-    with client.websocket_connect("/ws/simulation/test_session_std?user_tier=Standard") as websocket:
-        websocket.send_json({"action": "ping"})
-        # No sensory worker spawned, handles pipeline gracefully
+from services.streaming import websocket_pipeline
 
-    # Test Premium Tier connection: Ensure non-blocking serialization works
-    with client.websocket_connect("/ws/simulation/test_session_prem?user_tier=Premium_Research") as websocket:
-        websocket.send_json({
-            "action": "trigger_crisis_event",
-            "scent_trigger": "AGRI_CROP_ROT_FUNGAL_04"
-        })
-        
-        # Pull the emitted event frame
-        response = websocket.receive_json()
-        assert response["event"] == "SENSORY_TELEMETRY"
-        assert response["data"]["scent_profile_id"] == "AGRI_CROP_ROT_FUNGAL_04"
-        assert response["data"]["haptic_intensity"] == 0.85
+client = TestClient(websocket_pipeline.app)
+
+
+def test_sensory_response_works_in_sandbox(monkeypatch):
+    async def fake_macro_ripple(prompt: str) -> str:
+        return f"sandbox analysis: {prompt}"
+
+    async def fake_synthesize_speech(text: str) -> bytes:
+        return b"sandbox-audio"
+
+    monkeypatch.setattr(websocket_pipeline, "generate_macro_ripple", fake_macro_ripple)
+    monkeypatch.setattr(websocket_pipeline, "synthesize_speech_stream", fake_synthesize_speech)
+
+    with client.websocket_connect("/ws/simulation") as websocket:
+        assert websocket.receive_json()["type"] == "SYSTEM_STATUS"
+        websocket.send_json({"action": "TRIGGER_CRISIS", "prompt": "sensory fallback"})
+        analysis = websocket.receive_json()
+        audio = websocket.receive_json()
+
+    assert analysis["payload"]["analysis"] == "sandbox analysis: sensory fallback"
+    assert audio["type"] == "SENSORY_STREAM_INFO"
+    assert audio["payload"]["audio_chunk_size"] == len(b"sandbox-audio")
