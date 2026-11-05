@@ -8,9 +8,10 @@ primary_region = "atl"
   auto_start_machines = true
   min_machines_running = 1
 
+[env]
+  PUBLIC_BASE_URL = "https://mrg.fly.dev"
+
 [[vm]]
   cpu_kind = "shared"
   cpus = 1
   memory_mb = 1024
-[env]
-  STRIPE_PUBLISHABLE_KEY = "pk_test_...your_actual_publishable_key..."

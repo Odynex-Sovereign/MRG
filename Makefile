@@ -18,4 +18,4 @@ test:
 	PYTHONPATH=. python -m pytest -q
 
 test-billing:
-	PYTHONPATH=. python tests/mock_client_test.py
+	PYTHONPATH=. python -m pytest -q test_checkout.py
