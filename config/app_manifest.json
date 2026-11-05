@@ -1,0 +1,30 @@
+{
+  "application_identity": {
+    "app_id": "com.odynex.mrg_suite",
+    "version": "1.0.46",
+    "name": "MRG Integrated Simulation Suite",
+    "publisher": "Odynex Axis Logistics LLC",
+    "programmatic_partner_status": "NVIDIA Inception Member"
+  },
+  "distribution_channels": {
+    "enterprise_marketplaces": [
+      "aws_marketplace_saas",
+      "azure_app_source",
+      "google_cloud_marketplace",
+      "salesforce_appexchange"
+    ]
+  },
+  "headless_integration_bounds": {
+    "supported_authentication": ["OAuth2_Bearer_Tokens", "API_Secret_Keys"],
+    "webhook_callbacks": {
+      "simulation_stress_spike": "https://fly.dev",
+      "multiplayer_handshake_request": "https://fly.dev"
+    },
+    "data_privacy_isolation": "Private Edge-AI Framework - On-Site Compliance"
+  },
+  "permissions_requested": [
+    "networking.outbound.http_handshake",
+    "database.ledger_telemetry_read",
+    "communications.out-of-band.sms_alert_dispatch"
+  ]
+}
