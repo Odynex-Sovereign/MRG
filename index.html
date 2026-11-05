@@ -1,98 +1,664 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MRG Suite — Institutional Matrix Allocation</title>
-    <style>
-        :root { --bg: #09090b; --card: #18181b; --text: #f4f4f5; --accent: #22c55e; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; text-align: center; }
-        h1 { font-size: 2.5rem; margin-bottom: 10px; font-weight: 800; letter-spacing: -0.05em; }
-        p { color: #a1a1aa; margin-bottom: 40px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 1100px; margin: 0 auto; }
-        .card { background: var(--card); border: 1px solid #27272a; padding: 32px; border-radius: 12px; text-align: left; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s; }
-        .card:hover { transform: translateY(-4px); border-color: #3f3f46; }
-        .tier-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; }
-        .price { font-size: 2rem; font-weight: 800; margin: 16px 0; color: var(--accent); }
-        .price span { font-size: 1rem; color: #a1a1aa; font-weight: 400; }
-        .features { list-style: none; padding: 0; margin: 0 0 32px 0; font-size: 0.9rem; color: #d4d4d8; line-items: 1.6; }
-        .features li::before { content: "✓ "; color: var(--accent); margin-right: 8px; font-weight: bold; }
-        .btn { display: block; text-align: center; background: var(--text); color: var(--bg); font-weight: 600; padding: 12px; border-radius: 6px; text-decoration: none; cursor: pointer; transition: background 0.2s; }
-        .btn:hover { background: #e4e4e7; }
-        .btn-featured { background: var(--accent); color: white; }
-        .btn-featured:hover { background: #16a34a; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="MRG — Institutional Matrix Allocation. Provision planet-scale crisis simulation grids for executive stress-testing and decision readiness." />
+  <title>MRG Suite — Institutional Matrix Allocation</title>
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #0f0f12;
+      --card: #18181b;
+      --card-hover: #1f1f23;
+      --text: #fafafa;
+      --muted: #a1a1aa;
+      --accent: #22c55e;
+      --accent-dim: #16a34a;
+      --border: #27272a;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --radius: 12px;
+      --max: 1120px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { width: min(100% - 2rem, var(--max)); margin-inline: auto; }
+    /* Header */
+    .site-header {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(9,9,11,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.85rem 0; gap: 1rem;
+    }
+    .logo {
+      font-weight: 800; font-size: 1.15rem; letter-spacing: -0.03em;
+      color: var(--text); text-decoration: none;
+    }
+    .logo span { color: var(--accent); }
+    .nav-links {
+      display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap;
+      list-style: none; margin: 0; padding: 0;
+    }
+    .nav-links a {
+      color: var(--muted); font-size: 0.9rem; font-weight: 500;
+      text-decoration: none;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--accent); color: #052e16 !important;
+      padding: 0.45rem 0.9rem; border-radius: 6px; font-weight: 600;
+    }
+    .nav-cta:hover { background: var(--accent-dim); text-decoration: none; }
+    .menu-toggle {
+      display: none; background: none; border: 1px solid var(--border);
+      color: var(--text); padding: 0.4rem 0.7rem; border-radius: 6px; cursor: pointer;
+    }
+    /* Hero */
+    .hero {
+      padding: 4.5rem 0 3rem;
+      text-align: center;
+      background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(34,197,94,0.12), transparent);
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800; letter-spacing: -0.04em;
+      margin: 0 0 1rem; line-height: 1.15;
+    }
+    .hero .lead {
+      color: var(--muted); font-size: 1.1rem;
+      max-width: 560px; margin: 0 auto 2rem;
+    }
+    .hero-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0.75rem 1.35rem; border-radius: 8px; font-weight: 600;
+      font-size: 0.95rem; border: none; cursor: pointer;
+      transition: background 0.15s, opacity 0.15s, transform 0.1s;
+      text-decoration: none;
+    }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #052e16; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-dim); }
+    .btn-ghost {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover:not(:disabled) { border-color: #52525b; background: var(--card); }
+    .btn-block { width: 100%; }
+    /* Sections */
+    section { padding: 3.5rem 0; }
+    section h2 {
+      font-size: clamp(1.4rem, 3vw, 1.85rem);
+      font-weight: 750; letter-spacing: -0.03em;
+      margin: 0 0 0.5rem; text-align: center;
+    }
+    .section-sub {
+      color: var(--muted); text-align: center;
+      max-width: 520px; margin: 0 auto 2.25rem; font-size: 0.98rem;
+    }
+    /* Pricing grid */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.35rem;
+    }
+    .price-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      display: flex; flex-direction: column;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .price-card:hover { border-color: #3f3f46; transform: translateY(-2px); }
+    .price-card.featured {
+      border-color: rgba(34,197,94,0.45);
+      box-shadow: 0 0 0 1px rgba(34,197,94,0.15);
+    }
+    .badge {
+      display: inline-block; font-size: 0.7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      background: rgba(34,197,94,0.15); color: var(--accent);
+      padding: 0.25rem 0.55rem; border-radius: 999px; margin-bottom: 0.75rem;
+    }
+    .tier-name { font-size: 1.2rem; font-weight: 700; margin: 0 0 0.35rem; }
+    .tier-desc { color: var(--muted); font-size: 0.88rem; margin: 0 0 1rem; }
+    .price {
+      font-size: 2.1rem; font-weight: 800; letter-spacing: -0.03em;
+      color: var(--accent); margin: 0 0 0.25rem;
+    }
+    .price span { font-size: 0.95rem; font-weight: 500; color: var(--muted); }
+    .price-note { font-size: 0.8rem; color: var(--muted); margin: 0 0 1.25rem; }
+    .features {
+      list-style: none; padding: 0; margin: 0 0 1.5rem;
+      flex: 1; font-size: 0.9rem; color: #d4d4d8;
+    }
+    .features li {
+      padding: 0.35rem 0;
+      display: flex; gap: 0.5rem; align-items: flex-start;
+    }
+    .features li::before {
+      content: "✓"; color: var(--accent); font-weight: 700; flex-shrink: 0;
+    }
+    /* Status banner */
+    .status-region {
+      max-width: 640px; margin: 1.5rem auto 0;
+      padding: 1rem 1.15rem; border-radius: 8px;
+      text-align: left; display: none;
+    }
+    .status-region[data-visible="true"] { display: block; }
+    .status-region.error {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.35);
+      color: #fecaca;
+    }
+    .status-region.info {
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.3);
+      color: #bbf7d0;
+    }
+    .status-region .title { font-weight: 700; margin-bottom: 0.3rem; }
+    .status-region .actions { margin-top: 0.75rem; }
+    .status-region button {
+      background: transparent; border: 1px solid currentColor;
+      color: inherit; padding: 0.35rem 0.75rem; border-radius: 4px;
+      cursor: pointer; font-size: 0.85rem;
+    }
+    /* Feature pillars */
+    .pillars {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+    }
+    .pillar {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+    .pillar h3 { margin: 0 0 0.5rem; font-size: 1.05rem; }
+    .pillar p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+    /* How it works */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem; counter-reset: step;
+    }
+    .step {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.35rem;
+      position: relative;
+    }
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      display: flex; align-items: center; justify-content: center;
+      width: 1.75rem; height: 1.75rem;
+      background: rgba(34,197,94,0.15); color: var(--accent);
+      font-weight: 700; font-size: 0.85rem;
+      border-radius: 50%; margin-bottom: 0.75rem;
+    }
+    .step h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+    .step p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+    /* FAQ */
+    .faq-list { max-width: 720px; margin: 0 auto; }
+    details {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 0.65rem;
+      padding: 0.9rem 1.1rem;
+    }
+    details summary {
+      cursor: pointer; font-weight: 600; list-style: none;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::after { content: "+"; color: var(--muted); font-size: 1.2rem; }
+    details[open] summary::after { content: "−"; }
+    details p { margin: 0.75rem 0 0; color: var(--muted); font-size: 0.92rem; }
+    /* Contact strip */
+    .contact-strip {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      max-width: 640px; margin: 0 auto;
+    }
+    .contact-strip h2 { margin-bottom: 0.4rem; }
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 0 2rem;
+      margin-top: 1rem;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.4fr repeat(3, 1fr);
+      gap: 2rem;
+    }
+    .footer-brand { font-weight: 800; margin-bottom: 0.5rem; }
+    .footer-brand span { color: var(--accent); }
+    footer p, footer a { color: var(--muted); font-size: 0.875rem; }
+    footer a:hover { color: var(--text); }
+    footer ul { list-style: none; padding: 0; margin: 0; }
+    footer li { margin-bottom: 0.4rem; }
+    footer h4 {
+      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text); margin: 0 0 0.75rem;
+    }
+    .footer-bottom {
+      margin-top: 2rem; padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;
+      color: var(--muted); font-size: 0.8rem;
+    }
+    .notice {
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.25);
+      color: #fcd34d;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      max-width: 720px;
+      margin: 0 auto 1.75rem;
+      text-align: left;
+    }
+    /* Responsive */
+    @media (max-width: 768px) {
+      .menu-toggle { display: block; }
+      .nav-links {
+        display: none; position: absolute; top: 100%; left: 0; right: 0;
+        background: var(--bg); border-bottom: 1px solid var(--border);
+        flex-direction: column; padding: 1rem; gap: 0.75rem;
+      }
+      .nav-links.open { display: flex; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .hero { padding: 3rem 0 2rem; }
+    }
+    @media (max-width: 480px) {
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+  </style>
 </head>
 <body>
-
-    <h1>Institutional Matrix Allocation</h1>
-    <p>Select your operational footprint to provision planet-scale crisis simulation grids instantly.</p>
-
-    <div class="grid">
-        <!-- Tier 1 -->
-        <div class="card">
-            <div>
-                <div class="tier-name">Molecular SaaS</div>
-                <div class="price">$15,000<span>/mo</span></div>
-                <ul class="features">
-                    <li>Generative Discovery NIM Access</li>
-                    <li>Batched Conformer Engine</li>
-                    <li>96.5% Target Margin Model</li>
-                </ul>
-            </div>
-            <div class="btn" onclick="initializeCheckout('tier_1')">Deploy License</div>
-        </div>
-
-        <!-- Tier 2 -->
-        <div class="card">
-            <div>
-                <div class="tier-name">Infrastructure Base</div>
-                <div class="price">$35,000<span>/mo</span></div>
-                <ul class="features">
-                    <li>Adaptive Structural Subgrades</li>
-                    <li>Regional Base Entitlements</li>
-                    <li>Subsurface Stabilization Framework</li>
-                </ul>
-            </div>
-            <div class="btn" onclick="initializeCheckout('tier_2')">Deploy License</div>
-        </div>
-
-        <!-- Tier 3 -->
-        <div class="card">
-            <div>
-                <div class="tier-name">Platinum CAVE</div>
-                <div class="price">$160,000<span>/mo</span></div>
-                <ul class="features">
-                    <li>Omniverse CloudXR Matrix Sync</li>
-                    <li>Headset-Free Multi-User Environments</li>
-                    <li>Vocal Stress Response Analytics</li>
-                </ul>
-            </div>
-            <div class="btn btn-featured" onclick="initializeCheckout('tier_3')">Deploy Master Suite</div>
-        </div>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="logo" href="/">MRG <span>Grid</span></a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" id="menu-btn">Menu</button>
+      <ul class="nav-links" id="primary-nav">
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#capabilities">Capabilities</a></li>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a class="nav-cta" href="#pricing">Get started</a></li>
+      </ul>
     </div>
+  </header>
 
-    <script>
-        async function initializeCheckout(tierId) {
-            // Generate a random mock session tracking identifier for testing
-            const targetSession = "session_" + Math.random().toString(36).substring(2, 9);
-            
-            try {
-                const response = await fetch('/billing/v1/checkout/create-session', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session_id: targetSession, tier_id: tierId })
-                });
-                const data = await response.json();
-                if (data.checkout_url) {
-                    window.location.href = data.checkout_url;
-                } else {
-                    alert('Configuration Error: Unable to build checkout session loop.');
-                }
-            } catch (err) {
-                console.error('Network Error:', err);
-            }
+  <main>
+    <section class="hero">
+      <div class="container">
+        <h1>Institutional Matrix Allocation</h1>
+        <p class="lead">
+          Select your operational footprint to provision planet-scale crisis simulation grids.
+          Stress-test executive composure under controlled, high-stakes scenarios.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#pricing">View allocation tiers</a>
+          <a class="btn btn-ghost" href="#how">See how it works</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing">
+      <div class="container">
+        <h2>License allocation</h2>
+        <p class="section-sub">Self-serve institutional tiers. Enterprise retainers available on request.</p>
+
+        <div class="notice" role="note">
+          <strong>Payment status:</strong>
+          Checkout uses Stripe when <code>STRIPE_SECRET_KEY</code> is configured on the server.
+          Without it, the system runs in sandbox mode and will not redirect to a live payment page or claim a successful purchase.
+        </div>
+
+        <div id="status" class="status-region" role="alert" aria-live="polite" data-visible="false">
+          <div class="title" id="status-title"></div>
+          <div id="status-message"></div>
+          <div class="actions" id="status-actions"></div>
+        </div>
+
+        <div class="pricing-grid" id="tier-grid">
+          <!-- Tier 1 -->
+          <article class="price-card">
+            <div class="tier-name">Molecular SaaS</div>
+            <p class="tier-desc">Generative discovery and conformer workloads for R&amp;D teams.</p>
+            <div class="price">$15,000<span>/mo</span></div>
+            <p class="price-note">Billed monthly · USD</p>
+            <ul class="features">
+              <li>Generative Discovery NIM access</li>
+              <li>Batched conformer engine</li>
+              <li>Session telemetry &amp; audit trail</li>
+              <li>Standard support response window</li>
+            </ul>
+            <button type="button" class="btn btn-primary btn-block" data-tier="tier_1" aria-label="Start checkout for Molecular SaaS">
+              Deploy License
+            </button>
+          </article>
+
+          <!-- Tier 2 -->
+          <article class="price-card">
+            <div class="tier-name">Infrastructure Base</div>
+            <p class="tier-desc">Regional base entitlements and structural simulation capacity.</p>
+            <div class="price">$35,000<span>/mo</span></div>
+            <p class="price-note">Billed monthly · USD</p>
+            <ul class="features">
+              <li>Adaptive structural subgrades</li>
+              <li>Regional base entitlements</li>
+              <li>Subsurface stabilization framework</li>
+              <li>Priority support queue</li>
+            </ul>
+            <button type="button" class="btn btn-primary btn-block" data-tier="tier_2" aria-label="Start checkout for Infrastructure Base">
+              Deploy License
+            </button>
+          </article>
+
+          <!-- Tier 3 -->
+          <article class="price-card featured">
+            <span class="badge">Most complete</span>
+            <div class="tier-name">Platinum CAVE</div>
+            <p class="tier-desc">Full Omniverse CloudXR matrix with multi-user sensory analytics.</p>
+            <div class="price">$160,000<span>/mo</span></div>
+            <p class="price-note">Billed monthly · USD</p>
+            <ul class="features">
+              <li>Omniverse CloudXR matrix sync</li>
+              <li>Headset-free multi-user environments</li>
+              <li>Vocal stress response analytics</li>
+              <li>Dedicated success contact</li>
+            </ul>
+            <button type="button" class="btn btn-primary btn-block" data-tier="tier_3" aria-label="Start checkout for Platinum CAVE">
+              Deploy Master Suite
+            </button>
+          </article>
+        </div>
+
+        <p style="text-align:center;margin-top:1.75rem;color:var(--muted);font-size:0.9rem">
+          Need a custom retainer, SSO, or multi-region deployment?
+          <a href="#contact">Contact the team</a>.
+        </p>
+      </div>
+    </section>
+
+    <section id="capabilities">
+      <div class="container">
+        <h2>What you can exercise</h2>
+        <p class="section-sub">Controlled simulation layers for high-stakes professional decision environments.</p>
+        <div class="pillars">
+          <div class="pillar">
+            <h3>Macro cognitive loops</h3>
+            <p>Long-horizon systemic ripple analysis for board-level and market stress scenarios.</p>
+          </div>
+          <div class="pillar">
+            <h3>Micro conversational agents</h3>
+            <p>Low-latency adversarial dialogue for composure and negotiation drills.</p>
+          </div>
+          <div class="pillar">
+            <h3>Sensory telemetry</h3>
+            <p>Optional vocal and session stress signals for post-run debrief and coaching.</p>
+          </div>
+          <div class="pillar">
+            <h3>Session auditability</h3>
+            <p>Structured logs and seat/session records suitable for internal review workflows.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="container">
+        <h2>How allocation works</h2>
+        <p class="section-sub">From tier selection to active license — clear states, no false success.</p>
+        <div class="steps">
+          <div class="step">
+            <h3>Choose a tier</h3>
+            <p>Select the operational footprint that matches your team size and simulation depth.</p>
+          </div>
+          <div class="step">
+            <h3>Secure checkout</h3>
+            <p>Server-side Stripe Checkout when configured. Card data never touches this application.</p>
+          </div>
+          <div class="step">
+            <h3>Confirm &amp; activate</h3>
+            <p>Activation follows verified payment events. Sandbox environments never claim a live purchase.</p>
+          </div>
+          <div class="step">
+            <h3>Operate &amp; review</h3>
+            <p>Run scenarios, export session telemetry, and manage seats according to your plan.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="container">
+        <h2>FAQ</h2>
+        <p class="section-sub">Straightforward answers about billing, data, and deployment.</p>
+        <div class="faq-list">
+          <details>
+            <summary>Is payment processed on this site?</summary>
+            <p>No. When Stripe is configured, you are redirected to Stripe-hosted Checkout. Card details are handled by Stripe, not by MRG application servers.</p>
+          </details>
+          <details>
+            <summary>What happens if Stripe is not configured?</summary>
+            <p>The API returns a clear sandbox response with no checkout URL. The UI shows an informational message and does not claim that a license was purchased.</p>
+          </details>
+          <details>
+            <summary>Can I cancel or change plans?</summary>
+            <p>Yes. Subscriptions managed through Stripe can be canceled or modified according to the terms shown at checkout and in your Stripe customer portal (when enabled).</p>
+          </details>
+          <details>
+            <summary>Do you store payment card data?</summary>
+            <p>No. Payment instruments are handled by the payment provider. MRG may store non-sensitive references such as customer or subscription IDs after a verified webhook.</p>
+          </details>
+          <details>
+            <summary>Is this a regulated financial product?</summary>
+            <p>No. MRG provides simulation and decision-training software. It is not a bank, broker, insurer, or investment advisor, and it does not process customer funds beyond software license fees.</p>
+          </details>
+          <details>
+            <summary>How do enterprise / custom contracts work?</summary>
+            <p>Contact the team with volume, region, SSO, and SLA requirements. Custom retainers are quoted offline and are not completed through the self-serve checkout buttons.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact">
+      <div class="container">
+        <div class="contact-strip">
+          <h2>Talk to the team</h2>
+          <p class="section-sub" style="margin-bottom:1.25rem">
+            Enterprise allocation, pilots, and partnership inquiries.
+          </p>
+          <a class="btn btn-primary" href="mailto:ops@odynex.example?subject=MRG%20Institutional%20Inquiry">Email ops</a>
+          <p style="margin-top:1rem;font-size:0.85rem;color:var(--muted)">
+            Replace this address with your real operations inbox before public launch.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">MRG <span>Grid</span></div>
+          <p>Planet-scale crisis simulation for institutional decision readiness. Software licenses only.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="#capabilities">Capabilities</a></li>
+            <li><a href="#how">How it works</a></li>
+            <li><a href="#faq">FAQ</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/terms">Terms</a></li>
+            <li><a href="/security-policy">Security</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Status</h4>
+          <ul>
+            <li><a href="/healthz">System health</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="y"></span> MRG / Odynex. All rights reserved.</span>
+        <span>Not a regulated financial institution.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("y").textContent = new Date().getFullYear();
+
+    const menuBtn = document.getElementById("menu-btn");
+    const nav = document.getElementById("primary-nav");
+    menuBtn.addEventListener("click", function () {
+      const open = nav.classList.toggle("open");
+      menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+
+    (function () {
+      const statusEl = document.getElementById("status");
+      const statusTitle = document.getElementById("status-title");
+      const statusMessage = document.getElementById("status-message");
+      const statusActions = document.getElementById("status-actions");
+      const buttons = document.querySelectorAll("button[data-tier]");
+
+      function setStatus(type, title, message, retryTier) {
+        statusEl.className = "status-region " + (type === "error" ? "error" : "info");
+        statusEl.dataset.visible = "true";
+        statusTitle.textContent = title;
+        statusMessage.textContent = message;
+        statusActions.innerHTML = "";
+        if (retryTier) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = "Retry";
+          btn.addEventListener("click", function () { initializeCheckout(retryTier); });
+          statusActions.appendChild(btn);
         }
-    </script>
+        statusEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      function clearStatus() {
+        statusEl.dataset.visible = "false";
+        statusActions.innerHTML = "";
+      }
+
+      function setLoading(isLoading, activeTier) {
+        buttons.forEach(function (btn) {
+          btn.disabled = isLoading;
+          if (isLoading && btn.dataset.tier === activeTier) {
+            btn.dataset.originalLabel = btn.textContent;
+            btn.textContent = "Preparing checkout…";
+          } else if (!isLoading && btn.dataset.originalLabel) {
+            btn.textContent = btn.dataset.originalLabel;
+            delete btn.dataset.originalLabel;
+          }
+        });
+      }
+
+      async function initializeCheckout(tierId) {
+        clearStatus();
+        setLoading(true, tierId);
+        const targetSession = "session_" + Math.random().toString(36).slice(2, 11);
+
+        try {
+          const response = await fetch("/billing/v1/checkout/create-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({ session_id: targetSession, tier_id: tierId }),
+          });
+
+          let data = {};
+          try { data = await response.json(); } catch (_) {}
+
+          if (response.ok && data.checkout_url) {
+            window.location.href = data.checkout_url;
+            return;
+          }
+
+          const mode = data.mode || (response.ok ? "unknown" : "error");
+          if (mode === "sandbox" || data.error === "stripe_not_configured") {
+            setStatus(
+              "info",
+              "Checkout unavailable in this environment",
+              data.message ||
+                "Payment processing is not configured on this server. Set STRIPE_SECRET_KEY (test or live) and redeploy to enable card checkout. No charge was attempted.",
+              null
+            );
+          } else {
+            setStatus(
+              "error",
+              "Unable to start checkout",
+              data.message ||
+                (data.detail && (data.detail.message || data.detail)) ||
+                "A configuration or provider error occurred. You can retry or contact support.",
+              tierId
+            );
+          }
+        } catch (err) {
+          console.error("Checkout network error:", err);
+          setStatus(
+            "error",
+            "Network error",
+            "Could not reach the billing service. Check your connection and retry.",
+            tierId
+          );
+        } finally {
+          setLoading(false, tierId);
+        }
+      }
+
+      buttons.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          initializeCheckout(btn.dataset.tier);
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
