@@ -150,3 +150,13 @@ async def get_live_dashboard_telemetry():
 @app.on_event("shutdown")
 async def teardown_cluster_connections():
     await staging_analytics_engine.close_pool()
+from services.hft_streamer import HighFrequencyStreamingArbitrage
+
+@app.on_event("startup")
+async def activate_per_second_income_matrix():
+    # Instantiate the complete high-velocity revenue engine
+    hft_engine = HighFrequencyStreamingArbitrage(db_client=db_client)
+    
+    # Launch the task loop asynchronously separate from standard web traffic threads
+    asyncio.create_task(hft_engine.launch_second_by_second_yield_loop())
+    logger.info("[MRG Cluster] Version 48 split-second telemetry stream loops are active.")
