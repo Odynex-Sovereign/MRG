@@ -1,11 +1,14 @@
 import json
 import logging
+import os
+import uuid
 from pathlib import Path
 from typing import Any
 
-from fastapi import Depends, FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
 
 try:
     from sqlalchemy.orm import Session
@@ -43,10 +46,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Server-controlled catalog: clients choose a tier, never an amount or Stripe price.
+CHECKOUT_TIERS = {
+    "tier_1": {"name": "Molecular SaaS", "amount": 1_500_000},
+    "tier_2": {"name": "Infrastructure Base", "amount": 3_500_000},
+    "tier_3": {"name": "Platinum CAVE", "amount": 16_000_000},
+}
 
-@app.on_event("startup")
-async def startup_event():
-    logger.info("MRG simulation service started")
+
+class CheckoutRequest(BaseModel):
+    session_id: str | None = Field(default=None, min_length=1, max_length=100)
+    tier_id: str = Field(min_length=1, max_length=40)
 
 
 @app.get("/", include_in_schema=False)
@@ -62,33 +72,74 @@ async def health_check():
     return {
         "status": "healthy",
         "engine": "MRG Planet-Scale Grid",
-        "mode": "resilient_boot",
+        "mode": "live" if os.getenv("STRIPE_SECRET_KEY") else "sandbox",
+        "billing_configured": bool(os.getenv("STRIPE_SECRET_KEY")),
     }
 
 
-class SimulationConnectionManager:
-    """Tracks active simulation WebSocket connections."""
+@app.post("/billing/v1/checkout/create-session")
+async def create_checkout_session(payload: CheckoutRequest, request: Request):
+    """Create a Stripe-hosted monthly subscription checkout session."""
+    tier = CHECKOUT_TIERS.get(payload.tier_id)
+    if tier is None:
+        raise HTTPException(status_code=400, detail="Unknown checkout tier.")
 
-    def __init__(self):
-        self.active_connections: list[WebSocket] = []
+    stripe_key = os.getenv("STRIPE_SECRET_KEY")
+    if not stripe_key:
+        return {
+            "mode": "sandbox",
+            "checkout_url": None,
+            "error": "stripe_not_configured",
+            "message": "Stripe is not configured on this server. No charge was attempted.",
+        }
 
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-        logger.info("Simulation connection accepted; active=%d", len(self.active_connections))
+    try:
+        import stripe
+    except ImportError as exc:
+        logger.exception("Stripe SDK is missing while billing is configured")
+        raise HTTPException(status_code=503, detail="Stripe checkout is unavailable.") from exc
 
-    def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-            logger.info("Simulation connection closed; active=%d", len(self.active_connections))
+    base_url = os.getenv("PUBLIC_BASE_URL", "https://mrg.fly.dev").rstrip("/")
+    client_reference = payload.session_id or f"mrg_{uuid.uuid4().hex}"
+    try:
+        stripe.api_key = stripe_key
+        session = stripe.checkout.Session.create(
+            mode="subscription",
+            payment_method_types=["card"],
+            line_items=[
+                {
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {"name": tier["name"]},
+                        "unit_amount": tier["amount"],
+                        "recurring": {"interval": "month"},
+                    },
+                    "quantity": 1,
+                }
+            ],
+            client_reference_id=client_reference,
+            metadata={"tier_id": payload.tier_id},
+            success_url=f"{base_url}/?checkout=success&session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{base_url}/?checkout=cancelled#pricing",
+        )
+    except Exception as exc:
+        # Do not expose provider errors or credentials in API responses.
+        logger.exception("Stripe Checkout session creation failed for tier %s", payload.tier_id)
+        raise HTTPException(
+            status_code=502,
+            detail="Stripe could not start checkout. Please try again or contact support.",
+        ) from exc
 
-
-manager = SimulationConnectionManager()
+    return {
+        "mode": "live",
+        "checkout_url": session.url,
+        "session_id": session.id,
+    }
 
 
 @app.websocket("/ws/simulation")
 async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)):
-    await manager.connect(websocket)
+    await websocket.accept()
     try:
         await websocket.send_json({
             "type": "SYSTEM_STATUS",
@@ -135,8 +186,6 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
         pass
     except Exception:
         logger.exception("WebSocket pipeline failed")
-    finally:
-        manager.disconnect(websocket)
 
 
 if __name__ == "__main__":
