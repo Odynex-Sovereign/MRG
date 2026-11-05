@@ -1,48 +1,44 @@
-import pytest
 from fastapi.testclient import TestClient
 
-from services.streaming.websocket_pipeline import app
+from services.streaming import websocket_pipeline
+
+client = TestClient(websocket_pipeline.app)
 
 
-client = TestClient(app)
+def test_homepage_serves_browser_ui():
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "MRG Simulation Grid" in response.text
 
 
 def test_health_check():
     response = client.get("/healthz")
+
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
-    assert data["engine"] == "ODYNEX_AXIS_LOGISTICS"
+    assert data["engine"] == "MRG Planet-Scale Grid"
 
 
-def test_websocket_accepts_valid_telemetry_packet():
+def test_websocket_crisis_action_works_without_external_services(monkeypatch):
+    async def fake_macro_ripple(prompt: str) -> str:
+        return f"sandbox analysis: {prompt}"
+
+    async def fake_synthesize_speech(text: str) -> bytes:
+        return b"test-audio"
+
+    monkeypatch.setattr(websocket_pipeline, "generate_macro_ripple", fake_macro_ripple)
+    monkeypatch.setattr(websocket_pipeline, "synthesize_speech_stream", fake_synthesize_speech)
+
     with client.websocket_connect("/ws/simulation") as websocket:
-        payload = {
-            "user_id": "user-123",
-            "session_id": "session-abc",
-            "vertical": "Higher-Ed",
-            "vocal_pitch_variance": 24.5,
-            "vocal_energy": 68.2,
-            "response_latency_ms": 320,
-            "user_raw_text": "I believe my research methodology stands on solid data points despite the critique.",
-        }
+        assert websocket.receive_json()["type"] == "SYSTEM_STATUS"
+        websocket.send_json({"action": "TRIGGER_CRISIS", "prompt": "test incident"})
+        analysis = websocket.receive_json()
+        audio = websocket.receive_json()
 
-        websocket.send_json(payload)
-        response = websocket.receive_json()
-
-        assert response["session"]["user_id"] == "user-123"
-        assert response["session"]["session_id"] == "session-abc"
-        assert response["telemetry"]["vocal_stress_index"] >= 0
-        assert response["nvidia_audio2face_trigger"]["expression_profile"] in {
-            "skeptical_brow_raise",
-            "calculated_neutral",
-        }
-
-
-def test_websocket_rejects_invalid_packet():
-    with client.websocket_connect("/ws/simulation") as websocket:
-        websocket.send_json({"user_id": "user-123"})
-        response = websocket.receive_json()
-
-        assert response["error"] == "invalid_packet"
-        assert "detail" in response
+    assert analysis["type"] == "MACRO_COGNITIVE_UPDATE"
+    assert analysis["payload"]["analysis"] == "sandbox analysis: test incident"
+    assert audio["type"] == "SENSORY_STREAM_INFO"
+    assert audio["payload"]["audio_chunk_size"] == len(b"test-audio")
