@@ -1,1 +1,3 @@
-# Marks the tests directory as an importable module matrix block.
+from services.streaming.livepeer_distributor import LivepeerDistributor
+
+__all__ = ["LivepeerDistributor"]

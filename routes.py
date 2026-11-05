@@ -1,16 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, EmailStr
+from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
+
 class UserRegister(BaseModel):
-    email: EmailStr
+    # Use plain str so sandbox boots without optional email-validator package.
+    email: str = Field(..., min_length=3, max_length=254)
     full_name: str
     password: str
     department_vertical: str
 
+
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: str = Field(..., min_length=3, max_length=254)
     password: str
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
