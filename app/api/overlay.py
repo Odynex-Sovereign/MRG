@@ -160,3 +160,7 @@ async def activate_per_second_income_matrix():
     # Launch the task loop asynchronously separate from standard web traffic threads
     asyncio.create_task(hft_engine.launch_second_by_second_yield_loop())
     logger.info("[MRG Cluster] Version 48 split-second telemetry stream loops are active.")
+from app.api import checkout as checkout_routes
+
+# Include the newly compiled robust checkout layer into your active endpoint tree
+app.include_router(checkout_routes.router)
