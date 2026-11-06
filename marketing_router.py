@@ -34,7 +34,7 @@ class MarketingWebhookRouter:
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.post(webhook_url, json=payload)
-                if response.status_code in:
+                if response.status_code in (200, 201, 202, 204):
                     logger.info("[Syndication Router] Telemetry brief successfully pushed to global channels.")
                     return True
                 else:

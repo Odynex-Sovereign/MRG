@@ -1,12 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="MRG logo">
-  <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ff8533"/>
-      <stop offset="100%" stop-color="#ff6b1a"/>
-    </linearGradient>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="#141922" stroke="#252d3d" stroke-width="2"/>
-  <path d="M8 32 H18 L22 26 L26 38 L30 20 L34 44 L38 24 L42 36 L46 28 H56"
-        fill="none" stroke="url(#g)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <line x1="32" y1="10" x2="32" y2="54" stroke="#ff6b1a" stroke-width="1.5" opacity="0.5"/>
+  <rect width="64" height="64" rx="14" fill="#0a0c10"/>
+  <path d="M18 42 32 15l14 27H18zm4 0h20l-10-18-10 18zm-4 4h28v4H18v-4z" fill="#ff6b1a"/>
+  <circle cx="32" cy="22" r="4.5" fill="#2dd4bf"/>
 </svg>

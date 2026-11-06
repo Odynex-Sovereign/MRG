@@ -1,3 +1,2 @@
-from services.macro_engine.deepseek_client import DeepSeekMacroClient
-
-__all__ = ["DeepSeekMacroClient"]
+__version__ = "0.1.0"
+__all__ = ["__version__"]
