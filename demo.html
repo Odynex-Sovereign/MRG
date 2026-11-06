@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Demo — MRG{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width:720px">
+    <h1 class="section-title">Interactive sandbox demo</h1>
+    <p class="section-sub">
+      Run a short Black Swan-style scenario over a live WebSocket connection.
+      All metrics are simulated and labeled. No account required.
+    </p>
+
+    <div class="form-group">
+      <label for="scenario">Scenario</label>
+      <select id="scenario">
+        <option value="black_swan_supply">Supply Chain Black Swan</option>
+        <option value="cyber_cascade">Cascading Cyber Event</option>
+        <option value="macro_shock">Macro Policy Shock</option>
+      </select>
+    </div>
+
+    <div class="hero-actions mb-2">
+      <button type="button" class="btn btn-primary" id="start-btn">Start simulation</button>
+      <button type="button" class="btn btn-secondary" id="stop-btn" disabled>Stop</button>
+    </div>
+
+    <div class="alert alert-info" id="status">Ready. Click Start to connect.</div>
+    <div class="sim-log" id="log" role="log" aria-live="polite" aria-relevant="additions"></div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const logEl = document.getElementById("log");
+  const statusEl = document.getElementById("status");
+  const startBtn = document.getElementById("start-btn");
+  const stopBtn = document.getElementById("stop-btn");
+  const scenarioEl = document.getElementById("scenario");
+  let ws = null;
+
+  function addLine(text, cls) {
+    const div = document.createElement("div");
+    div.className = "line" + (cls ? " " + cls : "");
+    div.textContent = text;
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function setStatus(msg, kind) {
+    statusEl.textContent = msg;
+    statusEl.className = "alert alert-" + (kind || "info");
+  }
+
+  startBtn.addEventListener("click", function () {
+    if (ws) return;
+    logEl.innerHTML = "";
+    const proto = location.protocol === "https:" ? "wss:" : "ws:";
+    ws = new WebSocket(proto + "//" + location.host + "/ws/simulation");
+    setStatus("Connecting…", "info");
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+
+    ws.onopen = function () {
+      setStatus("Connected. Starting scenario…", "success");
+      ws.send(JSON.stringify({ action: "start", scenario: scenarioEl.value }));
+    };
+    ws.onmessage = function (ev) {
+      try {
+        const data = JSON.parse(ev.data);
+        if (data.type === "scenario_start") {
+          addLine("▶ " + data.title + " — " + data.description, "event");
+        } else if (data.type === "step") {
+          addLine("[" + data.index + "/" + data.total + "] " + data.text);
+        } else if (data.type === "metrics_update") {
+          const m = data.metrics;
+          addLine("Metrics (simulated): composure " + m.composure_score + ", stress " + m.vocal_stress_index, "event");
+        } else if (data.type === "scenario_complete") {
+          const m = data.metrics;
+          addLine("Complete — composure " + m.composure_score + " · " + data.debrief, "complete");
+          setStatus("Scenario complete. Metrics are simulated.", "success");
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+          ws.close();
+          ws = null;
+        } else if (data.type === "error") {
+          addLine("Error: " + data.message);
+        }
+      } catch (e) {
+        addLine(ev.data);
+      }
+    };
+    ws.onerror = function () {
+      setStatus("Connection error. Is the server running?", "warning");
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      ws = null;
+    };
+    ws.onclose = function () {
+      if (startBtn.disabled) {
+        setStatus("Disconnected.", "info");
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
+      ws = null;
+    };
+  });
+
+  stopBtn.addEventListener("click", function () {
+    if (ws) {
+      try { ws.send(JSON.stringify({ action: "stop" })); } catch (e) {}
+      ws.close();
+      ws = null;
+    }
+    setStatus("Stopped.", "info");
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+  });
+})();
+</script>
+{% endblock %}

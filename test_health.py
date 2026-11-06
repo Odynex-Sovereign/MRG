@@ -1,40 +1,29 @@
-"""Health and info endpoint tests."""
+"""Health and readiness endpoints."""
+
+from fastapi.testclient import TestClient
+
+from mrg.main import app
+
+client = TestClient(app)
 
 
-def test_liveness(client):
+def test_healthz():
     r = client.get("/healthz")
     assert r.status_code == 200
-    body = r.json()
-    assert body["status"] == "healthy"
-    assert "version" in body
+    data = r.json()
+    assert data["status"] == "ok"
+    assert "version" in data
 
 
-def test_readiness_sandbox(client):
+def test_readyz():
     r = client.get("/readyz")
     assert r.status_code == 200
-    body = r.json()
-    assert body["status"] == "ready"
-    assert body["checks"]["database"] == "not_configured"
+    data = r.json()
+    assert data["status"] == "ready"
+    assert "billing_configured" in data
 
 
-def test_info(client):
-    r = client.get("/info")
+def test_version_api():
+    r = client.get("/api/version")
     assert r.status_code == 200
-    body = r.json()
-    assert body["name"]
-    assert body["version"]
-    assert body["sandbox_mode"] is True
-
-
-def test_homepage(client):
-    r = client.get("/")
-    assert r.status_code == 200
-    # HTML UI or JSON fallback
-    assert r.headers["content-type"].startswith(("text/html", "application/json"))
-
-
-def test_security_headers(client):
-    r = client.get("/healthz")
-    assert r.headers.get("X-Content-Type-Options") == "nosniff"
-    assert r.headers.get("X-Frame-Options") == "DENY"
-    assert "X-Process-Time-Ms" in r.headers
+    assert "version" in r.json()

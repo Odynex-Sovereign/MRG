@@ -1,0 +1,75 @@
+/* MRG Design Tokens — dark, high-contrast operational theme */
+
+:root {
+  /* Base */
+  --mrg-bg: #0a0c10;
+  --mrg-bg-elevated: #10141c;
+  --mrg-bg-panel: #141922;
+  --mrg-bg-hover: #1a2030;
+  --mrg-border: #252d3d;
+  --mrg-border-subtle: #1c2333;
+
+  /* Text */
+  --mrg-text: #e8ecf4;
+  --mrg-text-muted: #9aa3b5;
+  --mrg-text-dim: #6b7385;
+
+  /* Accent — signal orange */
+  --mrg-orange: #ff6b1a;
+  --mrg-orange-bright: #ff8533;
+  --mrg-orange-dim: #c44e0e;
+  --mrg-orange-glow: rgba(255, 107, 26, 0.35);
+
+  /* Secondary — cyan/teal for success & data */
+  --mrg-cyan: #2dd4bf;
+  --mrg-cyan-dim: #14b8a6;
+  --mrg-cyan-glow: rgba(45, 212, 191, 0.25);
+
+  /* Status */
+  --mrg-success: #22c55e;
+  --mrg-warning: #eab308;
+  --mrg-danger: #ef4444;
+  --mrg-info: #38bdf8;
+
+  /* Typography */
+  --mrg-font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mrg-font-display: "Inter", system-ui, sans-serif;
+  --mrg-font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+
+  /* Spacing */
+  --mrg-space-1: 0.25rem;
+  --mrg-space-2: 0.5rem;
+  --mrg-space-3: 0.75rem;
+  --mrg-space-4: 1rem;
+  --mrg-space-5: 1.25rem;
+  --mrg-space-6: 1.5rem;
+  --mrg-space-8: 2rem;
+  --mrg-space-10: 2.5rem;
+  --mrg-space-12: 3rem;
+  --mrg-space-16: 4rem;
+
+  /* Radius */
+  --mrg-radius-sm: 6px;
+  --mrg-radius: 10px;
+  --mrg-radius-lg: 16px;
+  --mrg-radius-full: 9999px;
+
+  /* Elevation */
+  --mrg-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --mrg-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+  --mrg-shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.55);
+
+  /* Motion */
+  --mrg-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --mrg-duration: 180ms;
+
+  /* Layout */
+  --mrg-max: 1120px;
+  --mrg-nav-h: 64px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --mrg-duration: 0ms;
+  }
+}

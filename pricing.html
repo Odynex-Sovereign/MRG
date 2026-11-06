@@ -1,107 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pricing — MRG Simulation Suite</title>
-  <meta name="description" content="MRG pricing: free sandbox, Starter $49/mo, Growth $499/mo, Enterprise custom. 14-day trials on paid plans." />
-  <link rel="canonical" href="https://example.com/pricing" />
-  <meta property="og:title" content="MRG Pricing" />
-  <meta property="og:description" content="Transparent USD pricing for crisis simulation teams." />
-  <link rel="stylesheet" href="/assets/styles.css" />
-</head>
-<body>
-<a class="skip-link" href="#main">Skip to content</a>
-<header class="site-header">
-  <div class="container nav">
-    <a class="logo" href="/">MRG <span>Grid</span></a>
-    <button type="button" class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="primary-nav">Menu</button>
-    <nav id="primary-nav" class="nav-links" data-nav-links aria-label="Primary">
-      <a href="/pricing">Pricing</a>
-      <a href="/demo">Demo</a>
-      <a href="/investors">Investors</a>
-      <a href="/metrics">Metrics</a>
-      <a href="/faq">FAQ</a>
-      <a href="/contact">Contact</a>
-      <a class="btn btn-primary" href="/onboarding?plan=free">Start free</a>
-    </nav>
-  </div>
-</header>
-<main id="main" class="container" style="padding:2.5rem 0 3rem">
-  <h1>Pricing</h1>
-  <p class="section-lead">USD pricing. Subscriptions renew until canceled. Taxes may apply at checkout when payments are enabled. <strong>Checkout is currently demo mode</strong> — no live charges.</p>
-  <div id="billing-toggle" class="mb-2" role="group" aria-label="Billing interval">
-    <button type="button" class="btn btn-secondary" data-interval="month" aria-pressed="true">Monthly</button>
-    <button type="button" class="btn btn-ghost" data-interval="year" aria-pressed="false">Annual (save ~20%)</button>
-  </div>
-  <div class="grid grid-3" id="plans" aria-live="polite">
-    <p class="muted">Loading plans…</p>
-  </div>
-  <section class="mt-2">
-    <h2>Enterprise modules</h2>
-    <p class="section-lead">Vertical retainers quoted by sales. Sample catalog rates (USD / month) for planning only.</p>
-    <div class="card" style="overflow-x:auto">
-      <table id="enterprise-table">
-        <thead><tr><th>Module</th><th>Indicative rate</th><th>Type</th></tr></thead>
-        <tbody></tbody>
-      </table>
+{% extends "base.html" %}
+{% block title %}Pricing — MRG{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="section-title">Transparent pricing</h1>
+    <p class="section-sub">
+      Affordable for daily use. Scalable for teams and institutions. All amounts in USD; taxes and processor fees may apply.
+      Prices are configurable and may change; institutional terms require a written agreement.
+    </p>
+
+    <div class="price-grid">
+      {% for p in plans %}
+      <div class="price-card {% if p.popular %}popular{% endif %}">
+        {% if p.popular %}<span class="badge">Popular</span>{% endif %}
+        <h3>{{ p.name }}</h3>
+        <p class="desc">{{ p.description }}</p>
+        <div class="amount">
+          {% if p.id in ['enterprise', 'nonprofit'] %}
+            Custom
+          {% elif p.id == 'team' %}
+            ${{ p.monthly_usd | int }} <span>/ user / month</span>
+          {% else %}
+            ${{ p.monthly_usd | int }} <span>/ month</span>
+          {% endif %}
+        </div>
+        <div class="annual">
+          {% if p.id == 'team' %}
+            ${{ p.annual_usd | int }}/user/mo billed annually
+          {% elif p.annual_usd > 0 %}
+            ${{ p.annual_usd | int }}/year
+          {% elif p.id == 'nonprofit' %}
+            40–60% off after verification
+          {% else %}
+            &nbsp;
+          {% endif %}
+        </div>
+        <ul>
+          {% for f in p.features %}
+          <li>{{ f }}</li>
+          {% endfor %}
+        </ul>
+        <a class="btn {% if p.popular %}btn-primary{% else %}btn-secondary{% endif %}"
+           href="{% if p.id in ['enterprise', 'nonprofit'] %}/institutions{% else %}/onboarding?plan={{ p.id }}{% endif %}">
+          {{ p.cta }}
+        </a>
+      </div>
+      {% endfor %}
     </div>
-  </section>
-  <p class="muted mt-2" id="billing-note"></p>
-</main>
-<footer class="site-footer">
-  <div class="container footer-grid">
-    <div><h4>Product</h4><a href="/pricing">Pricing</a><a href="/demo">Live demo</a><a href="/onboarding">Onboarding</a></div>
-    <div><h4>Legal</h4><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/security-policy">Security</a></div>
+
+    <div class="alert alert-info mt-4">
+      <strong>Billing status:</strong> Checkout is demo-mode until Stripe keys are configured on the server.
+      No live charges occur without explicit operator configuration. See documentation for setup.
+    </div>
+
+    <h2 class="section-title mt-4">Institutional licensing</h2>
+    <p class="section-sub">
+      Municipalities, schools, nonprofits, healthcare, and enterprises can license annually, run a dedicated deployment, or negotiate a perpetual buy-out license.
+      <a href="/institutions">View institutional options →</a>
+    </p>
   </div>
-  <div class="container mt-2 muted">© 2026 Odynex · MRG</div>
-</footer>
-<script src="/assets/app.js" defer></script>
-<script>
-(function(){
-  let interval = "month";
-  let plans = [];
-  function money(n){
-    if(n===0) return "$0";
-    if(n==null) return "Custom";
-    return "$" + Number(n).toLocaleString("en-US");
-  }
-  function render(){
-    const root = document.getElementById("plans");
-    root.innerHTML = plans.map(function(p){
-      const price = interval==="year" ? p.price_annual : p.price_monthly;
-      const suffix = p.contact_sales ? "" : (interval==="year" ? '<span>/year</span>' : '<span>/month</span>');
-      const cls = p.highlighted ? "card featured" : "card";
-      const badge = p.badge ? '<div class="badge">'+p.badge+'</div>' : '';
-      const feats = (p.features||[]).map(function(f){return "<li>"+f+"</li>";}).join("");
-      const href = p.contact_sales ? p.cta_href : (p.price_monthly===0 ? p.cta_href : "/checkout?plan="+encodeURIComponent(p.id)+"&interval="+interval);
-      return '<article class="'+cls+'">'+badge+'<h3>'+p.name+'</h3><p class="muted">'+p.tagline+'</p><div class="price">'+money(price)+suffix+'</div><ul class="features">'+feats+'</ul><a class="btn '+(p.highlighted?"btn-primary":"btn-secondary")+' btn-block" href="'+href+'" onclick="mrgTrack(\'select_plan\',{plan:\''+p.id+'\',interval:\''+interval+'\'})">'+p.cta+'</a></article>';
-    }).join("");
-  }
-  fetch("/api/pricing").then(r=>r.json()).then(function(data){
-    plans = data.plans || [];
-    document.getElementById("billing-note").textContent = (data.meta&&data.meta.billing_note)||"";
-    const tb = document.querySelector("#enterprise-table tbody");
-    tb.innerHTML = (data.enterprise_modules||[]).map(function(m){
-      const rate = m.rate_monthly_usd==null ? "Contact sales" : "$"+Number(m.rate_monthly_usd).toLocaleString("en-US")+"/mo";
-      return "<tr><td>"+m.name+"</td><td>"+rate+"</td><td>"+m.type+"</td></tr>";
-    }).join("");
-    render();
-  }).catch(function(){
-    document.getElementById("plans").innerHTML = '<p class="alert alert-error">Could not load pricing. Ensure the API is running.</p>';
-  });
-  document.getElementById("billing-toggle").addEventListener("click", function(e){
-    const btn = e.target.closest("[data-interval]");
-    if(!btn) return;
-    interval = btn.getAttribute("data-interval");
-    document.querySelectorAll("#billing-toggle [data-interval]").forEach(function(b){
-      const on = b===btn;
-      b.setAttribute("aria-pressed", on?"true":"false");
-      b.className = "btn "+(on?"btn-secondary":"btn-ghost");
-    });
-    render();
-  });
-})();
-</script>
-</body>
-</html>
+</section>
+{% endblock %}

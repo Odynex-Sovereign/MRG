@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}FAQ — MRG{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width:720px">
+    <h1 class="section-title">Frequently asked questions</h1>
+
+    <article class="card mb-2">
+      <h3>What is MRG?</h3>
+      <p class="text-muted">MRG is an integrated simulation suite for practicing composure and decision-making under rare, high-impact pressure. It is designed for individuals, teams, and institutions.</p>
+    </article>
+    <article class="card mb-2">
+      <h3>Is this predictive software?</h3>
+      <p class="text-muted">No. MRG does not claim to predict black swan events. It helps you practice responses so you are better prepared if something unusual happens.</p>
+    </article>
+    <article class="card mb-2">
+      <h3>Do I need an account?</h3>
+      <p class="text-muted">You can try the public demo without an account. Free and paid plans use a simple onboarding flow. Full SSO is available for enterprise deployments that configure it.</p>
+    </article>
+    <article class="card mb-2">
+      <h3>Are the metrics real?</h3>
+      <p class="text-muted">Demo and sandbox metrics are labeled simulated. Deployments that connect approved models and sensors can produce richer feedback; those integrations are optional and documented.</p>
+    </article>
+    <article class="card mb-2">
+      <h3>How does billing work?</h3>
+      <p class="text-muted">Public plans are listed on the Pricing page. Checkout remains in demo mode until an operator configures Stripe secrets on the server. We never charge without that configuration.</p>
+    </article>
+    <article class="card mb-2">
+      <h3>Can my organization buy a perpetual license?</h3>
+      <p class="text-muted">Yes — see Institutional licensing. A buy-out is a negotiated perpetual license with defined rights and support years. It does not automatically transfer IP ownership unless the contract says so.</p>
+    </article>
+    <article class="card mb-2">
+      <h3>Is the product accessible?</h3>
+      <p class="text-muted">We aim for WCAG 2.2 AA on core flows: semantic HTML, keyboard navigation, visible focus, contrast, and labels. See the Accessibility page for status and how to report issues.</p>
+    </article>
+  </div>
+</section>
+{% endblock %}

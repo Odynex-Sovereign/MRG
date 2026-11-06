@@ -1,164 +1,181 @@
-# MRG Integrated Simulation Suite
+# MRG — Integrated Simulation Suite
 
-**Planet-scale crisis simulation grid** for teams that train decision-makers under extreme cognitive and sensory pressure.
+**Practice composure and clear decisions when rare, high-impact events unfold.**
 
-[![CI](https://github.com/Odynex-Sovereign/MRG/actions/workflows/ci.yml/badge.svg)](https://github.com/Odynex-Sovereign/MRG/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue)](https://python.org)
+MRG is a consumer-ready and institution-ready simulation product for individuals, teams, schools, nonprofits, municipalities, and enterprises. It provides guided scenarios (including optional Black Swan-style challenges), a simple dashboard, transparent pricing, and a documented path to institutional licensing or perpetual buy-out.
 
-## Product overview
+> **One sentence:** MRG helps you train for the day the plan breaks — safely, affordably, and without claiming to predict the future.
 
-MRG combines:
+![MRG](static/icons/logo.svg)
 
-- **Macro reasoning** (DeepSeek or offline sandbox)
-- **WebSocket simulation channel** for live telemetry and crisis prompts
-- **Sensory stream hooks** (NVIDIA Riva / Audio2Face ready)
-- **Transparent SaaS pricing** with demo checkout (Stripe-ready)
-
-**Target customers:** executive education, institutional risk teams, defense/training orgs, and operators running vertical crisis modules.
-
-## Features
-
-- Responsive marketing site (pricing, demo, investors, FAQ, legal templates)
-- Interactive browser demo against `/ws/simulation`
-- `/api/pricing` + demo checkout with validation and clear non-live labeling
-- Health/readiness probes, structured logs, security headers
-- Optional Postgres, Docker Compose, Fly.io, K8s manifests
-- Metrics and admin demo dashboards (sample data labeled)
-- Investor roadmap page with explicit placeholders
-
-## Tech stack
-
-| Area | Technology |
-|------|------------|
-| Backend | FastAPI, Uvicorn, Pydantic Settings |
-| Realtime | WebSockets |
-| Frontend | Accessible static HTML/CSS/JS |
-| DB (optional) | PostgreSQL + asyncpg |
-| Payments | Stripe adapter (demo until configured) |
-| Deploy | Docker, Compose, Fly.io, Kubernetes |
-
-See [DECISIONS.md](DECISIONS.md) for why this stack was chosen.
-
-## Project structure
-
-```
-mrg/                 Application package (API, config, pricing, services)
-app/                 Static UI pages + assets
-services/            Legacy/compat modules (billing, sensory adapters)
-database/            Migrations + pool helpers
-deploy/              K8s + Terraform starters
-docs/                Architecture, ops, runbook
-tests/               Pytest suite
-```
-
-## Prerequisites
-
-- Python 3.11+
-- Optional: Docker, `flyctl`, API keys (DeepSeek, NVIDIA, Stripe)
-
-## Local setup
+## Quick start (local)
 
 ```bash
-git clone https://github.com/Odynex-Sovereign/MRG.git
+git clone <this-repo>
 cd MRG
-python3.11 -m venv .venv
-source .venv/bin/activate
+python3.12 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 make install
 cp .env.example .env
-make sandbox
+make run
 ```
 
 Open:
 
-- http://localhost:8000/ — home
-- http://localhost:8000/pricing — plans
-- http://localhost:8000/demo — live WebSocket demo
-- http://localhost:8000/docs — OpenAPI (non-production)
+| URL | Purpose |
+|-----|---------|
+| http://localhost:8000/ | Landing page |
+| http://localhost:8000/pricing | Plans |
+| http://localhost:8000/demo | Live WebSocket sandbox simulation |
+| http://localhost:8000/onboarding | Guided start |
+| http://localhost:8000/dashboard | Application shell |
+| http://localhost:8000/institutions | Licensing & buy-out |
+| http://localhost:8000/healthz | Liveness |
+| http://localhost:8000/readyz | Readiness |
 
 ```bash
 make test
-make smoke   # requires server running
 ```
+
+## What the product does
+
+- **Landing & marketing** — clear value proposition, use cases, pricing overview, FAQ, trust notes  
+- **Onboarding** — plain-language path into a free or paid plan  
+- **Dashboard** — empty states, next actions, plan limits  
+- **Sandbox simulations** — WebSocket-driven scenarios with labeled simulated metrics  
+- **Feedback** — in-product report path  
+- **Institutional materials** — proposal, SOW, security outline, deployment checklist, support options  
+
+Capabilities that require external keys (Stripe, DeepSeek, NVIDIA) stay in **sandbox mode** until configured. The UI never pretends those integrations are live.
+
+## Architecture
+
+```
+mrg/
+  main.py           FastAPI app, routes, WebSocket
+  core/
+    config.py       Settings from environment
+    pricing.py      Central plans & entitlements
+    security.py     Headers + rate limiting
+  services/
+    simulation.py   Sandbox scenario engine
+static/             CSS, JS, icons (design system)
+templates/          Jinja2 pages
+institutional/      Buy-out & procurement templates
+tests/              Pytest suite
+```
+
+**Boundaries:** pricing and entitlements live only in `mrg/core/pricing.py`. Secrets only via environment / Fly secrets. Simulation outputs are explicitly labeled when simulated.
 
 ## Environment variables
 
-See [`.env.example`](.env.example). Important keys:
+See [`.env.example`](.env.example). Important:
 
 | Variable | Purpose |
 |----------|---------|
 | `ENVIRONMENT` | `development` / `staging` / `production` |
-| `DATABASE_URL` | Optional Postgres |
-| `DEEPSEEK_API_KEY` | Macro engine (sandbox if empty) |
-| `NVIDIA_NIM_API_KEY` | Sensory path |
-| `STRIPE_*` | Live billing (optional) |
-| `ADMIN_API_TOKEN` | Protect admin summary in production |
+| `SECRET_KEY` | Session / signing secret (required in production) |
+| `PUBLIC_BASE_URL` | Canonical public URL |
 | `CORS_ORIGINS` | Comma-separated origins |
+| `DATABASE_URL` | Optional Postgres |
+| `STRIPE_*` | Optional live billing |
+| `DEEPSEEK_API_KEY` / `NVIDIA_NIM_API_KEY` | Optional model paths |
+| `RATE_LIMIT_RPM` | Per-IP rate limit |
 
-**Never commit real secrets.**
+**Never commit secrets.**
 
-## Pricing & subscriptions
+## Pricing (default)
 
-Plans are defined in **`mrg/pricing.py`** only:
+Configurable in `mrg/core/pricing.py`:
 
-| Plan | Price |
-|------|-------|
-| Sandbox | $0 |
-| Starter | $49/mo ($470/yr) |
-| Growth | $499/mo ($4,790/yr) |
-| Enterprise | Contact sales |
+| Plan | Price | Notes |
+|------|-------|-------|
+| Free | $0 | 3 simulations / month |
+| Personal | $5/mo or $50/yr | Black Swan + digital-twin feedback |
+| Household | $10/mo or $100/yr | Up to 5 members |
+| Pro | $15/mo or $150/yr | Unlimited sims, API read, custom scenarios |
+| Team | $10/user/mo or $8/user/mo annual | Collaboration + audit basics |
+| Nonprofit / Education | 40–60% off after verification | Eligibility workflow |
+| Enterprise | Custom | SSO, dedicated, buy-out path |
 
-Checkout is **demo mode** until Stripe is connected. Full detail: [PRICING.md](PRICING.md).
+Institutional buy-out **illustrative** ranges (see `/institutions` and `institutional/`):
 
-## Commands
+- Small: $15,000–$40,000  
+- Mid: $40,000–$125,000  
+- Large: $125,000–$500,000+  
+
+A buy-out is a **perpetual license** under contract — not an automatic IP ownership transfer unless the agreement says so.
+
+## Docker
 
 ```bash
-make lint format typecheck test test-cov
-make sandbox docker-up docker-down migrate smoke
+docker build -t mrg:local .
+docker run --rm -p 8000:8000 -e SECRET_KEY=dev-only mrg:local
 ```
 
-## Deployment
+## Fly.io deployment
 
-- Docker Compose: `make docker-up`
-- Fly.io: see [DEPLOYMENT.md](DEPLOYMENT.md)
-- CI: `.github/workflows/ci.yml` (lint, typecheck, test, image build, optional Fly deploy)
+```bash
+# Install flyctl, then:
+fly launch --no-deploy   # or use existing fly.toml
+fly secrets set SECRET_KEY="$(openssl rand -hex 32)"
+# Optional:
+# fly secrets set STRIPE_SECRET_KEY=sk_live_...
+# fly secrets set DATABASE_URL=...
+fly deploy
+fly status
+fly logs
+```
 
-## Accessibility, security, SEO
+Useful operations:
 
-- Skip links, focus styles, semantic structure, reduced-motion support
-- Security headers, non-root containers, input validation
-- Meta description, Open Graph, JSON-LD on home, canonical placeholders
+```bash
+fly scale count 2
+fly secrets list
+fly releases
+fly deploy --image-label rollback   # or redeploy prior release
+```
 
-## Troubleshooting
+Health checks hit `/healthz`. The process binds `0.0.0.0:$PORT`.
 
-| Issue | Action |
-|-------|--------|
-| Import errors | `export PYTHONPATH=.` and reinstall requirements |
-| WS fails behind proxy | Ensure WebSocket upgrade support |
-| `/readyz` 503 | DB configured but unreachable — fix DSN or unset `DATABASE_URL` |
-| Checkout errors | Only `free`/`starter`/`growth` are self-serve; accept terms required |
+## Security model (accurate)
 
-More: [docs/runbook.md](docs/runbook.md)
+- Security headers and basic rate limiting enabled  
+- No secrets in the repository  
+- Optional billing and model keys remain inactive until set  
+- We do **not** claim SOC 2, ISO 27001, or FedRAMP unless independently completed under contract  
 
-## Documentation index
+## Accessibility
 
-| Doc | Purpose |
+Core pages use semantic HTML, skip links, visible focus, labeled forms, and respect `prefers-reduced-motion`. See `/accessibility`.
+
+## Testing & quality
+
+```bash
+make test
+make lint
+```
+
+CI runs install, lint (advisory), and pytest on push/PR.
+
+## Documentation map
+
+| Doc | Content |
 |-----|---------|
-| [PRICING.md](PRICING.md) | Plans & Stripe wiring |
-| [AUDIT.md](AUDIT.md) | Audit + investment scorecard |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System design |
-| [API.md](API.md) | HTTP/WS reference |
-| [METRICS.md](METRICS.md) | Analytics events |
-| [INVESTOR_READINESS.md](INVESTOR_READINESS.md) | Fundraising narrative |
-| [ROADMAP.md](ROADMAP.md) | Milestones |
-| [SECURITY.md](SECURITY.md) | Vulnerability reporting |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | Ship checklist |
-| [DECISIONS.md](DECISIONS.md) | ADRs & costs |
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+| `README.md` | This file |
+| `institutional/*` | Proposal, SOW, security outline, checklists |
+| `/security` | In-app security summary |
+| `/faq` | End-user FAQ |
 
 ## License
 
-MIT — [LICENSE](LICENSE).
+See `LICENSE` (MIT unless otherwise noted in downstream agreements).
+
+## Known limitations & next steps
+
+- Full multi-tenant auth/SSO is structured for extension; default onboarding is lightweight  
+- Stripe checkout activation requires operator-configured secrets  
+- Persistent user data requires configuring `DATABASE_URL` and adding migrations  
+- Chart-heavy operational views should continue screen-reader testing as they grow  
+
+Recommended next steps: wire identity provider, enable Stripe webhooks for entitlements, add Postgres-backed session history, and expand E2E tests for billing once keys exist in a protected environment.

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Security — MRG{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width:720px">
+    <h1 class="section-title">Security & data handling</h1>
+    <p class="section-sub">Accurate posture — no unsupported certifications claimed.</p>
+
+    <article class="card mb-2">
+      <h3>What we process</h3>
+      <p class="text-muted">Account details you provide, simulation choices, optional feedback, and standard technical logs (IP, user agent) for reliability and abuse prevention.</p>
+    </article>
+    <article class="card mb-2">
+      <h3>What we do not do by default</h3>
+      <p class="text-muted">We do not sell personal data. We do not claim SOC 2, ISO 27001, FedRAMP, or similar certifications unless a specific deployment has completed those audits under contract.</p>
+    </article>
+    <article class="card mb-2">
+      <h3>Technical controls in this product</h3>
+      <ul class="text-muted">
+        <li>Security headers (CSP, frame denial, nosniff, referrer policy)</li>
+        <li>Rate limiting on application routes</li>
+        <li>Secrets via environment / Fly secrets — never committed</li>
+        <li>Optional Postgres with connection via DATABASE_URL</li>
+        <li>Health and readiness endpoints for orchestration</li>
+      </ul>
+    </article>
+    <article class="card mb-2">
+      <h3>Institutional deployments</h3>
+      <p class="text-muted">Dedicated instances, data residency preferences, SSO, and audit logging can be scoped in a written agreement. See Institutional licensing.</p>
+    </article>
+    <article class="card mb-2">
+      <h3>Report a concern</h3>
+      <p class="text-muted">Use the <a href="/contact">contact form</a> with category “security”. Do not send secrets or personal data of others.</p>
+    </article>
+  </div>
+</section>
+{% endblock %}

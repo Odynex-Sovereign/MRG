@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Institutional licensing & buy-out — MRG{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="section-title">Institutional licensing & buy-out</h1>
+    <p class="section-sub">
+      For municipalities, public agencies, schools, universities, nonprofits, healthcare organizations, and corporations.
+      All figures below are <strong>illustrative</strong> and subject to a written agreement and legal review.
+      A buy-out grants a perpetual license under contract terms — it does not automatically transfer ownership of intellectual property unless the negotiated agreement expressly says so.
+    </p>
+
+    <div class="card-grid cols-3">
+      <article class="card">
+        <h3>1. Annual SaaS license</h3>
+        <p>
+          Per-user or organization-tier pricing, hosted by us (or your chosen region).
+          Includes defined support level, hosting model, and renewal terms.
+        </p>
+        <p class="text-muted mt-2">Best for: ongoing training programs that prefer operational simplicity.</p>
+      </article>
+      <article class="card">
+        <h3>2. Dedicated / private deployment</h3>
+        <p>
+          Customer-specific Fly.io, cloud, or customer-hosted instance.
+          Optional data residency, migration, training, and maintenance packages.
+        </p>
+        <p class="text-muted mt-2">Best for: regulated environments and data-control requirements.</p>
+      </article>
+      <article class="card">
+        <h3>3. Perpetual buy-out license</h3>
+        <p>
+          One-time source and deployment license with a defined scope of rights,
+          optional escrow, and a set number of support / update / security-maintenance years.
+          Optional annual maintenance after the included period.
+        </p>
+        <p class="text-muted mt-2">
+          Explicit exclusions: third-party costs, cloud spend, custom feature development,
+          legal/compliance certification, and external service fees — unless scoped separately.
+        </p>
+      </article>
+    </div>
+
+    <h2 class="section-title mt-4">Suggested pricing ranges</h2>
+    <p class="text-muted mb-2">Configurable in product pricing configuration. Not quotes.</p>
+    <div class="card-grid">
+      {% for key, r in ranges.items() %}
+      <article class="card">
+        <h3>{{ r.label }}</h3>
+        <p class="text-orange" style="font-size:1.35rem;font-weight:700;margin:0.5rem 0">${{ r.range_usd }}</p>
+        <p class="text-muted">{{ r.notes }}</p>
+      </article>
+      {% endfor %}
+    </div>
+
+    <div class="alert alert-warning mt-4">
+      <strong>Important:</strong> These ranges are for planning conversations only.
+      Final pricing depends on user counts, deployment model, support level, compliance needs, and contract terms.
+      We do not claim that any package transfers ownership unless a specific negotiated agreement states otherwise.
+      Use careful terms such as “perpetual license,” “source-available license,” or “deployment license.”
+    </div>
+
+    <h2 class="section-title mt-4">Templates available</h2>
+    <ul class="text-muted">
+      <li>Institutional proposal outline</li>
+      <li>Statement of work (SOW) template</li>
+      <li>Procurement / security questionnaire response outline</li>
+      <li>Deployment options checklist</li>
+      <li>Support and service-level options sheet</li>
+    </ul>
+    <p class="mt-2">See the <code>institutional/</code> directory in the repository for editable Markdown templates.</p>
+
+    <div class="hero-actions mt-4">
+      <a class="btn btn-primary btn-lg" href="/contact">Contact institutional sales</a>
+      <a class="btn btn-secondary btn-lg" href="/pricing">View SaaS pricing</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

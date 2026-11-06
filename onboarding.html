@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Get started — MRG{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width:560px">
+    <h1 class="section-title">Get started in minutes</h1>
+    <p class="section-sub">
+      Create a free practice account. No credit card required for the Free plan.
+      This onboarding flow is local/demo — production deployments should connect a real identity provider.
+    </p>
+
+    <div class="alert alert-info">
+      <strong>Plain-language path:</strong> choose a plan → enter a name and email → open your dashboard.
+      Advanced settings appear only after you are comfortable with the basics.
+    </div>
+
+    <form id="onboard-form" action="/dashboard" method="get">
+      <div class="form-group">
+        <label for="plan">Plan</label>
+        <select id="plan" name="plan">
+          <option value="free">Free — $0</option>
+          <option value="personal">Personal — $5/mo</option>
+          <option value="household">Household — $10/mo</option>
+          <option value="pro">Pro — $15/mo</option>
+          <option value="team">Team — from $8–10/user/mo</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="name">Display name</label>
+        <input id="name" name="name" type="text" autocomplete="name" required maxlength="80" placeholder="Alex Rivera">
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" required maxlength="200" placeholder="you@example.com">
+        <p class="form-hint">Used only for account recovery and product updates you opt into.</p>
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg" style="width:100%">Continue to dashboard</button>
+    </form>
+
+    <p class="text-muted mt-2" style="font-size:0.9rem">
+      By continuing you agree to the <a href="/legal/terms">Terms</a> and <a href="/legal/privacy">Privacy</a> notices.
+      Full authentication (password, SSO) is enabled when the deployment configures an identity backend.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const params = new URLSearchParams(location.search);
+  const plan = params.get("plan");
+  if (plan) {
+    const sel = document.getElementById("plan");
+    if ([...sel.options].some(o => o.value === plan)) sel.value = plan;
+  }
+</script>
+{% endblock %}

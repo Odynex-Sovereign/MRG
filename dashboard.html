@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — MRG{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Application">
+    <nav>
+      <a href="/dashboard" aria-current="page">Overview</a>
+      <a href="/demo">Simulations</a>
+      <a href="/demo">Black Swan Challenge</a>
+      <a href="/pricing">Plan & billing</a>
+      <a href="/contact">Feedback</a>
+      <a href="/onboarding">Settings</a>
+    </nav>
+  </aside>
+  <div class="main-panel">
+    <h1 class="section-title">Your practice overview</h1>
+    <p class="text-muted mb-2">
+      Welcome. This dashboard uses sensible defaults. Empty states guide you to the next useful action.
+    </p>
+
+    <div class="alert alert-info">
+      You are on the <strong>Free</strong> plan (demo view). Upgrade anytime from Pricing.
+      Simulations remaining this month: <strong>3</strong>.
+    </div>
+
+    <div class="card-grid cols-3">
+      <article class="card">
+        <h3>Start a simulation</h3>
+        <p>Run a guided scenario and review composure feedback.</p>
+        <a class="btn btn-primary mt-2" href="/demo">Open simulator</a>
+      </article>
+      <article class="card">
+        <h3>Black Swan Challenge</h3>
+        <p>Available on Personal and above. Practice rare, high-impact events.</p>
+        <a class="btn btn-secondary mt-2" href="/pricing">See plans</a>
+      </article>
+      <article class="card">
+        <h3>Reports</h3>
+        <p>No sessions yet. Complete a simulation to unlock debrief exports.</p>
+        <span class="btn btn-ghost mt-2" aria-disabled="true">Export unavailable</span>
+      </article>
+    </div>
+
+    <h2 class="section-title mt-4">Recent activity</h2>
+    <div class="card">
+      <p class="text-muted" style="margin:0">
+        Nothing here yet. When you complete sessions, they will appear with timestamps and key metrics.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MRG Integrated Simulation Suite — practice composure and decision-making under rare, high-impact scenarios. Built for individuals, teams, and institutions.">
+  <meta name="theme-color" content="#0a0c10">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <link rel="icon" href="/static/icons/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/main.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="nav-brand" href="/" aria-label="MRG home">
+        <img src="/static/icons/logo.svg" width="36" height="36" alt="">
+        <span>MRG</span>
+      </a>
+      <ul class="nav-links" role="list">
+        <li><a href="/#use-cases" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Use cases</a></li>
+        <li><a href="/pricing" {% if request.url.path == '/pricing' %}aria-current="page"{% endif %}>Pricing</a></li>
+        <li><a href="/institutions" {% if request.url.path == '/institutions' %}aria-current="page"{% endif %}>Institutions</a></li>
+        <li><a href="/demo" {% if request.url.path == '/demo' %}aria-current="page"{% endif %}>Demo</a></li>
+        <li><a href="/faq" {% if request.url.path == '/faq' %}aria-current="page"{% endif %}>FAQ</a></li>
+      </ul>
+      <div class="nav-cta">
+        <a class="btn btn-ghost" href="/onboarding">Sign in</a>
+        <a class="btn btn-primary" href="/onboarding">Get started</a>
+        <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="mobile-nav" id="nav-toggle">
+          <span class="sr-only">Menu</span>
+          ☰
+        </button>
+      </div>
+    </div>
+    <nav id="mobile-nav" class="nav-mobile" hidden>
+      <a href="/#use-cases">Use cases</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/institutions">Institutions</a>
+      <a href="/demo">Demo</a>
+      <a href="/faq">FAQ</a>
+      <a href="/onboarding">Get started</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <strong>MRG — Integrated Simulation Suite</strong>
+        Practice composure and clear decisions when rare, high-impact events unfold.
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/demo">Live demo</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/onboarding">Onboarding</a></li>
+          <li><a href="/dashboard">Dashboard</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Institutions</h4>
+        <ul>
+          <li><a href="/institutions">Licensing & buy-out</a></li>
+          <li><a href="/security">Security</a></li>
+          <li><a href="/contact">Contact sales</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="/accessibility">Accessibility</a></li>
+          <li><a href="/contact">Feedback</a></li>
+          <li><a href="/legal/privacy">Privacy</a></li>
+          <li><a href="/legal/terms">Terms</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© {{ version }} Odynex Axis Logistics LLC. All prices illustrative; subject to agreement.</span>
+      <span>v{{ version }} · <a href="/healthz">Status</a></span>
+    </div>
+  </footer>
+
+  <script src="/static/js/app.js" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
