@@ -1,21 +1,23 @@
-# MRG development and deployment helpers
+# MRG development helpers
 
-.PHONY: sandbox docker-up migrate test test-billing install-deps
+.PHONY: install lint format test run clean
 
-install-deps:
+install:
+	python -m pip install -U pip
 	python -m pip install -r requirements.txt
+	python -m pip install -e .[dev]
 
-sandbox:
-	PYTHONPATH=. python -m uvicorn services.streaming.websocket_pipeline:app --reload --host 0.0.0.0 --port 8000
+run:
+	PYTHONPATH=. python -m uvicorn mrg.main:app --host 0.0.0.0 --port 8000
 
-docker-up:
-	docker compose up -d --build
+lint:
+	python -m ruff check .
 
-migrate:
-	PYTHONPATH=. python database/db_client.py
+format:
+	python -m black .
 
 test:
 	PYTHONPATH=. python -m pytest -q
 
-test-billing:
-	PYTHONPATH=. python -m pytest -q test_checkout.py
+clean:
+	rm -rf .venv __pycache__ .pytest_cache
