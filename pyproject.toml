@@ -1,12 +1,41 @@
+[project]
+name = "mrg"
+version = "0.1.0"
+description = "MRG — Integrated Simulation Suite"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.32.0",
+  "pydantic>=2.9.0",
+  "pydantic-settings>=2.6.0",
+  "python-dotenv>=1.0.0",
+  "httpx>=0.27.0",
+  "jinja2>=3.1.0",
+  "email-validator>=2.2.0",
+  "python-multipart>=0.0.12",
+  "itsdangerous>=2.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.0",
+  "pytest-asyncio>=0.24.0",
+  "ruff>=0.8.0",
+  "black>=24.8.0",
+]
+
 [tool.black]
 line-length = 120
-target-version = ['py311']
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | __pycache__
-  | \.venv
-  | pgdata
-)/
-'''
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+python_files = ["test_*.py"]
+
+[tool.setuptools]
+packages = ["mrg"]
