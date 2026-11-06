@@ -24,13 +24,12 @@ ENV PYTHONPATH=/app
 # STAGE 2: Local Development Sandbox (Target: development)
 # ==========================================
 FROM base AS development
-# Enable auto-reload features and detailed debug loops for local coding
-CMD ["python", "-m", "uvicorn", "services.streaming.websocket_pipeline:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["sh", "-c", "exec python -m uvicorn mrg.main:app --host 0.0.0.0 --port ${PORT:-8000} --reload"]
 
 
 # ==========================================
 # STAGE 3: Production Cloud Delivery (Target: production)
 # ==========================================
 FROM base AS production
-# Lock code execution and strip hot-reloading overhead for maximum stability on Fly.io
-CMD ["python", "-m", "uvicorn", "services.streaming.websocket_pipeline:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the documented production application, not the legacy streaming prototype.
+CMD ["sh", "-c", "exec python -m uvicorn mrg.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

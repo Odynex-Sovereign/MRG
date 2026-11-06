@@ -6,11 +6,12 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from mrg import __version__
 from mrg.config import Settings, get_settings
+from simulation import SimulationSession, run_sandbox_simulation
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 STATIC_DIR = ROOT_DIR / "static"
@@ -90,6 +91,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             payload = await request.json()
         except Exception:
             return JSONResponse({"detail": "Invalid JSON body."}, status_code=400)
+        if not isinstance(payload, dict):
+            return JSONResponse({"detail": "JSON body must be an object."}, status_code=400)
         message = str(payload.get("message", "")).strip()
         if not message:
             return JSONResponse({"detail": "Message is required."}, status_code=400)
@@ -110,13 +113,27 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 except json.JSONDecodeError:
                     await websocket.send_json({"type": "SYSTEM_ERROR", "payload": {"message": "Invalid JSON frame received."}})
                     continue
-                action = payload.get("action")
-                if action != "TRIGGER_CRISIS":
-                    await websocket.send_json({"type": "SYSTEM_ERROR", "payload": {"message": f"Unknown execution target: {action}"}})
+                if not isinstance(payload, dict):
+                    await websocket.send_json({"type": "SYSTEM_ERROR", "payload": {"message": "A JSON object is required."}})
                     continue
-                prompt = str(payload.get("prompt") or "MRG sandbox simulation")
-                await websocket.send_json({"type": "MACRO_COGNITIVE_UPDATE", "payload": {"analysis": f"[Sandbox mode] Simulating macro response for: {prompt}"}})
-                await websocket.send_json({"type": "SENSORY_STREAM_INFO", "payload": {"audio_chunk_size": 128, "status": "streaming"}})
+
+                action = payload.get("action")
+                if action == "start":
+                    # Match the browser demo protocol: stream scenario_start, step,
+                    # metrics_update, and scenario_complete events until completion.
+                    scenario_id = str(payload.get("scenario") or "black_swan_supply")
+                    session = SimulationSession()
+                    async for event in run_sandbox_simulation(session, scenario_id):
+                        await websocket.send_json(event)
+                    continue
+
+                if action == "TRIGGER_CRISIS":
+                    prompt = str(payload.get("prompt") or "MRG sandbox simulation")
+                    await websocket.send_json({"type": "MACRO_COGNITIVE_UPDATE", "payload": {"analysis": f"[Sandbox mode] Simulating macro response for: {prompt}"}})
+                    await websocket.send_json({"type": "SENSORY_STREAM_INFO", "payload": {"audio_chunk_size": 128, "status": "streaming"}})
+                    continue
+
+                await websocket.send_json({"type": "SYSTEM_ERROR", "payload": {"message": f"Unknown execution target: {action}"}})
         except WebSocketDisconnect:
             pass
         except Exception:
