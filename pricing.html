@@ -1,64 +1,65 @@
-{% extends "base.html" %}
-{% block title %}Pricing — MRG{% endblock %}
-
-{% block content %}
-<section class="section">
-  <div class="container">
-    <h1 class="section-title">Transparent pricing</h1>
-    <p class="section-sub">
-      Affordable for daily use. Scalable for teams and institutions. All amounts in USD; taxes and processor fees may apply.
-      Prices are configurable and may change; institutional terms require a written agreement.
-    </p>
-
-    <div class="price-grid">
-      {% for p in plans %}
-      <div class="price-card {% if p.popular %}popular{% endif %}">
-        {% if p.popular %}<span class="badge">Popular</span>{% endif %}
-        <h3>{{ p.name }}</h3>
-        <p class="desc">{{ p.description }}</p>
-        <div class="amount">
-          {% if p.id in ['enterprise', 'nonprofit'] %}
-            Custom
-          {% elif p.id == 'team' %}
-            ${{ p.monthly_usd | int }} <span>/ user / month</span>
-          {% else %}
-            ${{ p.monthly_usd | int }} <span>/ month</span>
-          {% endif %}
-        </div>
-        <div class="annual">
-          {% if p.id == 'team' %}
-            ${{ p.annual_usd | int }}/user/mo billed annually
-          {% elif p.annual_usd > 0 %}
-            ${{ p.annual_usd | int }}/year
-          {% elif p.id == 'nonprofit' %}
-            40–60% off after verification
-          {% else %}
-            &nbsp;
-          {% endif %}
-        </div>
-        <ul>
-          {% for f in p.features %}
-          <li>{{ f }}</li>
-          {% endfor %}
-        </ul>
-        <a class="btn {% if p.popular %}btn-primary{% else %}btn-secondary{% endif %}"
-           href="{% if p.id in ['enterprise', 'nonprofit'] %}/institutions{% else %}/onboarding?plan={{ p.id }}{% endif %}">
-          {{ p.cta }}
-        </a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MRG Integrated Simulation Suite — practice composure under rare, high-impact pressure.">
+  <meta name="theme-color" content="#0a0c10">
+  <title>Pricing — MRG</title>
+  <link rel="icon" href="/static/icons/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="nav-brand" href="/" aria-label="MRG home">
+        <img src="/static/icons/logo.svg" width="36" height="36" alt="">
+        <span>MRG</span>
+      </a>
+      <ul class="nav-links" role="list"><li><a href="/#use-cases">Use cases</a></li><li><a href="/pricing" aria-current="page">Pricing</a></li><li><a href="/institutions">Institutions</a></li><li><a href="/demo">Demo</a></li><li><a href="/faq">FAQ</a></li></ul>
+      <div class="nav-cta">
+        <a class="btn btn-ghost" href="/onboarding">Sign in</a>
+        <a class="btn btn-primary" href="/onboarding">Get started</a>
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="mobile-nav"><span class="sr-only">Menu</span>☰</button>
       </div>
-      {% endfor %}
     </div>
-
-    <div class="alert alert-info mt-4">
-      <strong>Billing status:</strong> Checkout is demo-mode until Stripe keys are configured on the server.
-      No live charges occur without explicit operator configuration. See documentation for setup.
+    <nav id="mobile-nav" class="nav-mobile" hidden>
+      <a href="/pricing">Pricing</a>
+      <a href="/institutions">Institutions</a>
+      <a href="/demo">Demo</a>
+      <a href="/faq">FAQ</a>
+      <a href="/onboarding">Get started</a>
+    </nav>
+  </header>
+  <main id="main">
+<section class="section"><div class="container">
+<h1 class="section-title">Transparent pricing</h1>
+<p class="section-sub">Affordable for daily use. Scalable for teams and institutions. USD; taxes may apply.</p>
+<div class="price-grid">
+<div class="price-card"><h3>Free</h3><p class="desc">Essential personal practice.</p><div class="amount">$0 <span>/ month</span></div><div class="annual">&nbsp;</div><ul><li>3 simulations per month</li><li>Basic feedback</li><li>Community scenarios</li></ul><a class="btn btn-secondary" href="/onboarding?plan=free">Start free</a></div>
+<div class="price-card popular"><span class="badge">Popular</span><h3>Personal</h3><p class="desc">Deeper practice and higher limits.</p><div class="amount">$5 <span>/ month</span></div><div class="annual">$50/year</div><ul><li>30 simulations / month</li><li>Black Swan Challenge</li><li>Digital-twin scoring</li><li>Exports</li></ul><a class="btn btn-primary" href="/onboarding?plan=personal">Start 14-day trial</a></div>
+<div class="price-card"><h3>Household</h3><p class="desc">Up to 5 people.</p><div class="amount">$10 <span>/ month</span></div><div class="annual">$100/year</div><ul><li>Everything in Personal</li><li>Up to 5 members</li><li>Shared library</li></ul><a class="btn btn-secondary" href="/onboarding?plan=household">Start trial</a></div>
+<div class="price-card"><h3>Pro</h3><p class="desc">Advanced workflows.</p><div class="amount">$15 <span>/ month</span></div><div class="annual">$150/year</div><ul><li>Unlimited simulations</li><li>Custom scenarios</li><li>API access</li><li>Priority support</li></ul><a class="btn btn-secondary" href="/onboarding?plan=pro">Start trial</a></div>
+<div class="price-card"><h3>Team</h3><p class="desc">Collaboration and admin.</p><div class="amount">$10 <span>/ user / month</span></div><div class="annual">$8/user/mo annual</div><ul><li>Everything in Pro</li><li>Per-seat billing</li><li>Shared workspaces</li></ul><a class="btn btn-secondary" href="/onboarding?plan=team">Start trial</a></div>
+<div class="price-card"><h3>Nonprofit / Education</h3><p class="desc">40–60% off after verification.</p><div class="amount">Custom</div><div class="annual">&nbsp;</div><ul><li>Discounted rates</li><li>Institutional library</li></ul><a class="btn btn-secondary" href="/institutions">Request eligibility</a></div>
+<div class="price-card"><h3>Enterprise</h3><p class="desc">SSO, audit logs, dedicated options.</p><div class="amount">Custom</div><div class="annual">&nbsp;</div><ul><li>SSO when configured</li><li>Dedicated deployment</li><li>Buy-out path</li></ul><a class="btn btn-secondary" href="/institutions">Contact sales</a></div>
+</div>
+<div class="alert alert-info mt-4"><strong>Billing:</strong> Checkout is demo-mode until Stripe is configured. No live charges without operator setup.</div>
+</div></section>
+</main>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand"><strong>MRG — Integrated Simulation Suite</strong> Practice composure when rare, high-impact events unfold.</div>
+      <div class="footer-col"><h4>Product</h4><ul><li><a href="/demo">Demo</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/dashboard">Dashboard</a></li></ul></div>
+      <div class="footer-col"><h4>Institutions</h4><ul><li><a href="/institutions">Licensing</a></li><li><a href="/security">Security</a></li><li><a href="/contact">Contact</a></li></ul></div>
+      <div class="footer-col"><h4>Support</h4><ul><li><a href="/faq">FAQ</a></li><li><a href="/accessibility">Accessibility</a></li><li><a href="/legal/privacy">Privacy</a></li><li><a href="/legal/terms">Terms</a></li></ul></div>
     </div>
-
-    <h2 class="section-title mt-4">Institutional licensing</h2>
-    <p class="section-sub">
-      Municipalities, schools, nonprofits, healthcare, and enterprises can license annually, run a dedicated deployment, or negotiate a perpetual buy-out license.
-      <a href="/institutions">View institutional options →</a>
-    </p>
-  </div>
-</section>
-{% endblock %}
+    <div class="container footer-bottom">
+      <span>© Odynex Axis Logistics LLC. Prices illustrative.</span>
+      <span><a href="/healthz">Status</a></span>
+    </div>
+  </footer>
+  <script src="/static/js/app.js" defer></script>
+</body>
+</html>

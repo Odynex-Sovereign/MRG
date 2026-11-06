@@ -1,58 +1,64 @@
-{% extends "base.html" %}
-{% block title %}Get started — MRG{% endblock %}
-
-{% block content %}
-<section class="section">
-  <div class="container" style="max-width:560px">
-    <h1 class="section-title">Get started in minutes</h1>
-    <p class="section-sub">
-      Create a free practice account. No credit card required for the Free plan.
-      This onboarding flow is local/demo — production deployments should connect a real identity provider.
-    </p>
-
-    <div class="alert alert-info">
-      <strong>Plain-language path:</strong> choose a plan → enter a name and email → open your dashboard.
-      Advanced settings appear only after you are comfortable with the basics.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MRG Integrated Simulation Suite — practice composure under rare, high-impact pressure.">
+  <meta name="theme-color" content="#0a0c10">
+  <title>Get started — MRG</title>
+  <link rel="icon" href="/static/icons/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="nav-brand" href="/" aria-label="MRG home">
+        <img src="/static/icons/logo.svg" width="36" height="36" alt="">
+        <span>MRG</span>
+      </a>
+      <ul class="nav-links" role="list"><li><a href="/#use-cases">Use cases</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/institutions">Institutions</a></li><li><a href="/demo">Demo</a></li><li><a href="/faq">FAQ</a></li></ul>
+      <div class="nav-cta">
+        <a class="btn btn-ghost" href="/onboarding">Sign in</a>
+        <a class="btn btn-primary" href="/onboarding">Get started</a>
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="mobile-nav"><span class="sr-only">Menu</span>☰</button>
+      </div>
     </div>
-
-    <form id="onboard-form" action="/dashboard" method="get">
-      <div class="form-group">
-        <label for="plan">Plan</label>
-        <select id="plan" name="plan">
-          <option value="free">Free — $0</option>
-          <option value="personal">Personal — $5/mo</option>
-          <option value="household">Household — $10/mo</option>
-          <option value="pro">Pro — $15/mo</option>
-          <option value="team">Team — from $8–10/user/mo</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="name">Display name</label>
-        <input id="name" name="name" type="text" autocomplete="name" required maxlength="80" placeholder="Alex Rivera">
-      </div>
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" autocomplete="email" required maxlength="200" placeholder="you@example.com">
-        <p class="form-hint">Used only for account recovery and product updates you opt into.</p>
-      </div>
-      <button type="submit" class="btn btn-primary btn-lg" style="width:100%">Continue to dashboard</button>
-    </form>
-
-    <p class="text-muted mt-2" style="font-size:0.9rem">
-      By continuing you agree to the <a href="/legal/terms">Terms</a> and <a href="/legal/privacy">Privacy</a> notices.
-      Full authentication (password, SSO) is enabled when the deployment configures an identity backend.
-    </p>
-  </div>
-</section>
-{% endblock %}
-
-{% block scripts %}
-<script>
-  const params = new URLSearchParams(location.search);
-  const plan = params.get("plan");
-  if (plan) {
-    const sel = document.getElementById("plan");
-    if ([...sel.options].some(o => o.value === plan)) sel.value = plan;
-  }
-</script>
-{% endblock %}
+    <nav id="mobile-nav" class="nav-mobile" hidden>
+      <a href="/pricing">Pricing</a>
+      <a href="/institutions">Institutions</a>
+      <a href="/demo">Demo</a>
+      <a href="/faq">FAQ</a>
+      <a href="/onboarding">Get started</a>
+    </nav>
+  </header>
+  <main id="main">
+<section class="section"><div class="container" style="max-width:560px">
+<h1 class="section-title">Get started in minutes</h1>
+<p class="section-sub">No credit card for Free. Plain-language path into practice.</p>
+<div class="alert alert-info">Choose a plan → enter name and email → open your dashboard.</div>
+<form action="/dashboard" method="get">
+<div class="form-group"><label for="plan">Plan</label><select id="plan" name="plan"><option value="free">Free — $0</option><option value="personal">Personal — $5/mo</option><option value="household">Household — $10/mo</option><option value="pro">Pro — $15/mo</option><option value="team">Team</option></select></div>
+<div class="form-group"><label for="name">Display name</label><input id="name" name="name" required maxlength="80" autocomplete="name" placeholder="Alex Rivera"></div>
+<div class="form-group"><label for="email">Email</label><input id="email" name="email" type="email" required maxlength="200" autocomplete="email" placeholder="you@example.com"><p class="form-hint">For account recovery and updates you opt into.</p></div>
+<button type="submit" class="btn btn-primary btn-lg" style="width:100%">Continue to dashboard</button>
+</form>
+<p class="text-muted mt-2" style="font-size:0.9rem"><a href="/legal/terms">Terms</a> · <a href="/legal/privacy">Privacy</a></p>
+<script>const p=new URLSearchParams(location.search).get("plan");if(p){const s=document.getElementById("plan");if([...s.options].some(o=>o.value===p))s.value=p;}</script>
+</div></section>
+</main>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand"><strong>MRG — Integrated Simulation Suite</strong> Practice composure when rare, high-impact events unfold.</div>
+      <div class="footer-col"><h4>Product</h4><ul><li><a href="/demo">Demo</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/dashboard">Dashboard</a></li></ul></div>
+      <div class="footer-col"><h4>Institutions</h4><ul><li><a href="/institutions">Licensing</a></li><li><a href="/security">Security</a></li><li><a href="/contact">Contact</a></li></ul></div>
+      <div class="footer-col"><h4>Support</h4><ul><li><a href="/faq">FAQ</a></li><li><a href="/accessibility">Accessibility</a></li><li><a href="/legal/privacy">Privacy</a></li><li><a href="/legal/terms">Terms</a></li></ul></div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© Odynex Axis Logistics LLC. Prices illustrative.</span>
+      <span><a href="/healthz">Status</a></span>
+    </div>
+  </footer>
+  <script src="/static/js/app.js" defer></script>
+</body>
+</html>

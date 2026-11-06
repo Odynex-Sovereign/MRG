@@ -1,14 +1,43 @@
-{% extends "base.html" %}
-{% block title %}MRG — Practice composure when it matters{% endblock %}
-
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MRG Integrated Simulation Suite — practice composure under rare, high-impact pressure.">
+  <meta name="theme-color" content="#0a0c10">
+  <title>MRG — Practice composure when it matters</title>
+  <link rel="icon" href="/static/icons/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="nav-brand" href="/" aria-label="MRG home">
+        <img src="/static/icons/logo.svg" width="36" height="36" alt="">
+        <span>MRG</span>
+      </a>
+      <ul class="nav-links" role="list"><li><a href="/#use-cases">Use cases</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/institutions">Institutions</a></li><li><a href="/demo">Demo</a></li><li><a href="/faq">FAQ</a></li></ul>
+      <div class="nav-cta">
+        <a class="btn btn-ghost" href="/onboarding">Sign in</a>
+        <a class="btn btn-primary" href="/onboarding">Get started</a>
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="mobile-nav"><span class="sr-only">Menu</span>☰</button>
+      </div>
+    </div>
+    <nav id="mobile-nav" class="nav-mobile" hidden>
+      <a href="/pricing">Pricing</a>
+      <a href="/institutions">Institutions</a>
+      <a href="/demo">Demo</a>
+      <a href="/faq">FAQ</a>
+      <a href="/onboarding">Get started</a>
+    </nav>
+  </header>
+  <main id="main">
 <section class="hero">
   <div class="container hero-grid">
     <div>
       <h1>Train for the day the plan breaks.</h1>
-      <p class="lead">
-        MRG is an integrated simulation suite that helps individuals and teams practice calm, clear decisions under rare, high-impact pressure — without the cost of a real crisis.
-      </p>
+      <p class="lead">MRG is an integrated simulation suite that helps individuals and teams practice calm, clear decisions under rare, high-impact pressure — without the cost of a real crisis.</p>
       <div class="hero-actions">
         <a class="btn btn-primary btn-lg" href="/onboarding">Start free</a>
         <a class="btn btn-secondary btn-lg" href="/demo">Explore the platform</a>
@@ -17,18 +46,9 @@
     <div class="hero-preview" aria-label="Product preview">
       <div class="label">Live composure panel · simulated</div>
       <div class="metric-row">
-        <div class="metric-card">
-          <div class="value text-cyan">84</div>
-          <div class="name">Composure</div>
-        </div>
-        <div class="metric-card">
-          <div class="value" style="color:var(--mrg-orange)">72</div>
-          <div class="name">Vocal stress</div>
-        </div>
-        <div class="metric-card">
-          <div class="value text-cyan">91</div>
-          <div class="name">Decisiveness</div>
-        </div>
+        <div class="metric-card"><div class="value text-cyan">84</div><div class="name">Composure</div></div>
+        <div class="metric-card"><div class="value" style="color:var(--mrg-orange)">72</div><div class="name">Vocal stress</div></div>
+        <div class="metric-card"><div class="value text-cyan">91</div><div class="name">Decisiveness</div></div>
       </div>
       <div class="wave-visual" aria-hidden="true">
         <span style="height:30%"></span><span style="height:55%"></span><span style="height:80%"></span>
@@ -36,107 +56,66 @@
         <span style="height:35%"></span><span style="height:70%"></span><span style="height:50%"></span>
         <span style="height:40%"></span><span style="height:85%"></span><span style="height:55%"></span>
       </div>
-      <p class="text-dim" style="font-size:0.8rem;margin:0.5rem 0 0">
-        Metrics shown are illustrative. Real sessions use your plan entitlements.
-      </p>
+      <p class="text-dim" style="font-size:0.8rem;margin:0.5rem 0 0">Metrics shown are illustrative.</p>
     </div>
   </div>
 </section>
-
 <section class="section" id="use-cases">
   <div class="container">
     <h2 class="section-title">Built for everyday readiness</h2>
-    <p class="section-sub">
-      Whether you lead a team, run operations, or simply want to stay sharp under stress, MRG gives you a safe place to practice.
-    </p>
+    <p class="section-sub">Whether you lead a team, run operations, or simply want to stay sharp under stress, MRG gives you a safe place to practice.</p>
     <div class="card-grid cols-3">
-      <article class="card">
-        <div class="icon" aria-hidden="true">◎</div>
-        <h3>Personal composure practice</h3>
-        <p>Run short scenarios, review decision points, and track how your composure holds when information is incomplete.</p>
-      </article>
-      <article class="card">
-        <div class="icon" aria-hidden="true">◈</div>
-        <h3>Black Swan Challenge</h3>
-        <p>Optional high-impact modules that put rare disruptions in front of you so the first time is not the real one.</p>
-      </article>
-      <article class="card">
-        <div class="icon" aria-hidden="true">▣</div>
-        <h3>Team & institutional drills</h3>
-        <p>Shared workspaces, role-based access, and debrief reports for training programs and readiness exercises.</p>
-      </article>
+      <article class="card"><div class="icon" aria-hidden="true">◎</div><h3>Personal composure practice</h3><p>Run short scenarios, review decision points, and track how your composure holds when information is incomplete.</p></article>
+      <article class="card"><div class="icon" aria-hidden="true">◈</div><h3>Black Swan Challenge</h3><p>Optional high-impact modules that put rare disruptions in front of you so the first time is not the real one.</p></article>
+      <article class="card"><div class="icon" aria-hidden="true">▣</div><h3>Team &amp; institutional drills</h3><p>Shared workspaces, role-based access, and debrief reports for training programs and readiness exercises.</p></article>
     </div>
   </div>
 </section>
-
 <section class="section" style="background:var(--mrg-bg-elevated)">
   <div class="container">
     <h2 class="section-title">How a session works</h2>
     <p class="section-sub">Clear steps. No jargon required.</p>
     <div class="card-grid cols-3">
-      <article class="card">
-        <h3>1. Choose a scenario</h3>
-        <p>Supply shock, cyber cascade, macro policy event, or a custom drill your organization provides.</p>
-      </article>
-      <article class="card">
-        <h3>2. Decide under pressure</h3>
-        <p>Work through timed steps. The system records choices and (on eligible plans) composure signals.</p>
-      </article>
-      <article class="card">
-        <h3>3. Debrief and improve</h3>
-        <p>Review what went well, where stress rose, and what you would do differently next time.</p>
-      </article>
+      <article class="card"><h3>1. Choose a scenario</h3><p>Supply shock, cyber cascade, macro policy event, or a custom drill.</p></article>
+      <article class="card"><h3>2. Decide under pressure</h3><p>Work through timed steps. The system records choices and composure signals on eligible plans.</p></article>
+      <article class="card"><h3>3. Debrief and improve</h3><p>Review what went well, where stress rose, and what you would do differently next time.</p></article>
     </div>
   </div>
 </section>
-
 <section class="section">
   <div class="container">
     <h2 class="section-title">Simple, affordable pricing</h2>
     <p class="section-sub">Start free. Upgrade when you need more capacity or team features.</p>
     <div class="price-grid">
-      {% for p in plans if p.id in ['free', 'personal', 'pro'] %}
-      <div class="price-card {% if p.popular %}popular{% endif %}">
-        {% if p.popular %}<span class="badge">Popular</span>{% endif %}
-        <h3>{{ p.name }}</h3>
-        <p class="desc">{{ p.description }}</p>
-        <div class="amount">
-          {% if p.monthly_usd == 0 and p.id != 'enterprise' and p.id != 'nonprofit' %}
-            $0 <span>/ month</span>
-          {% elif p.monthly_usd > 0 %}
-            ${{ p.monthly_usd | int }} <span>/ month</span>
-          {% else %}
-            Custom
-          {% endif %}
-        </div>
-        {% if p.annual_usd > 0 %}
-        <div class="annual">${{ p.annual_usd | int }}/year · save vs monthly</div>
-        {% else %}
-        <div class="annual">&nbsp;</div>
-        {% endif %}
-        <ul>
-          {% for f in p.features[:5] %}
-          <li>{{ f }}</li>
-          {% endfor %}
-        </ul>
-        <a class="btn {% if p.popular %}btn-primary{% else %}btn-secondary{% endif %}" href="/onboarding?plan={{ p.id }}">{{ p.cta }}</a>
-      </div>
-      {% endfor %}
+      <div class="price-card"><h3>Free</h3><p class="desc">Essential personal practice. No credit card required.</p><div class="amount">$0 <span>/ month</span></div><div class="annual">&nbsp;</div><ul><li>3 simulations per month</li><li>Basic composure feedback</li><li>Community scenarios</li><li>Mobile + desktop access</li></ul><a class="btn btn-secondary" href="/onboarding?plan=free">Start free</a></div>
+      <div class="price-card popular"><span class="badge">Popular</span><h3>Personal</h3><p class="desc">For daily users who want deeper practice and higher limits.</p><div class="amount">$5 <span>/ month</span></div><div class="annual">$50/year · save vs monthly</div><ul><li>30 simulations per month</li><li>Black Swan Challenge access</li><li>Digital-twin composure scoring</li><li>Exportable session reports</li><li>Email support</li></ul><a class="btn btn-primary" href="/onboarding?plan=personal">Start 14-day trial</a></div>
+      <div class="price-card"><h3>Pro</h3><p class="desc">Advanced workflows, higher limits, and integrations.</p><div class="amount">$15 <span>/ month</span></div><div class="annual">$150/year</div><ul><li>Unlimited simulations</li><li>Custom scenario builder</li><li>API access (read)</li><li>Priority email support</li><li>Advanced analytics</li></ul><a class="btn btn-secondary" href="/onboarding?plan=pro">Start 14-day trial</a></div>
     </div>
-    <p class="center mt-4 text-muted">
-      See <a href="/pricing">full pricing</a> including Household, Team, Nonprofit, and Enterprise.
-      Institutions: <a href="/institutions">licensing & buy-out options</a>.
-    </p>
+    <p class="center mt-4 text-muted">See <a href="/pricing">full pricing</a> · Institutions: <a href="/institutions">licensing &amp; buy-out</a>.</p>
   </div>
 </section>
-
 <section class="section">
   <div class="container">
     <div class="trust-bar">
       <span><strong>Data handling:</strong> We only process what you submit for simulations and accounts.</span>
-      <span><strong>No fake claims:</strong> Metrics are labeled simulated unless your deployment is configured otherwise.</span>
-      <span><a href="/security">Security overview</a> · <a href="/accessibility">Accessibility</a></span>
+      <span><strong>No fake claims:</strong> Metrics are labeled simulated unless configured otherwise.</span>
+      <span><a href="/security">Security</a> · <a href="/accessibility">Accessibility</a></span>
     </div>
   </div>
 </section>
-{% endblock %}
+</main>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand"><strong>MRG — Integrated Simulation Suite</strong> Practice composure when rare, high-impact events unfold.</div>
+      <div class="footer-col"><h4>Product</h4><ul><li><a href="/demo">Demo</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/dashboard">Dashboard</a></li></ul></div>
+      <div class="footer-col"><h4>Institutions</h4><ul><li><a href="/institutions">Licensing</a></li><li><a href="/security">Security</a></li><li><a href="/contact">Contact</a></li></ul></div>
+      <div class="footer-col"><h4>Support</h4><ul><li><a href="/faq">FAQ</a></li><li><a href="/accessibility">Accessibility</a></li><li><a href="/legal/privacy">Privacy</a></li><li><a href="/legal/terms">Terms</a></li></ul></div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© Odynex Axis Logistics LLC. Prices illustrative.</span>
+      <span><a href="/healthz">Status</a></span>
+    </div>
+  </footer>
+  <script src="/static/js/app.js" defer></script>
+</body>
+</html>

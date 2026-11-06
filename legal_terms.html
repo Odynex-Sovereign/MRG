@@ -1,31 +1,55 @@
-{% extends "base.html" %}
-{% block title %}Terms of use — MRG{% endblock %}
-
-{% block content %}
-<section class="section">
-  <div class="container" style="max-width:720px">
-    <h1 class="section-title">Terms of use</h1>
-    <p class="text-muted">Last updated: 2026-11-05. This is a product template, not legal advice.</p>
-    <article class="card mb-2">
-      <h3>Service</h3>
-      <p class="text-muted">MRG provides simulation and training tools. Scenarios and metrics are for practice and education. We do not guarantee outcomes in real-world events.</p>
-    </article>
-    <article class="card mb-2">
-      <h3>Accounts</h3>
-      <p class="text-muted">You are responsible for activity under your account. Do not share credentials. Institutional accounts may be managed by an administrator under a separate agreement.</p>
-    </article>
-    <article class="card mb-2">
-      <h3>Acceptable use</h3>
-      <p class="text-muted">Do not attempt to disrupt the service, probe other tenants, or use the product for unlawful purposes. We may suspend access for abuse.</p>
-    </article>
-    <article class="card mb-2">
-      <h3>Pricing and billing</h3>
-      <p class="text-muted">Published prices are illustrative until confirmed at checkout or in a written order. Institutional licenses and buy-outs are governed by the signed agreement.</p>
-    </article>
-    <article class="card mb-2">
-      <h3>Limitation of liability</h3>
-      <p class="text-muted">To the extent permitted by law, the service is provided “as is.” Liability is limited as set out in any commercial agreement or applicable law.</p>
-    </article>
-  </div>
-</section>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MRG Integrated Simulation Suite — practice composure under rare, high-impact pressure.">
+  <meta name="theme-color" content="#0a0c10">
+  <title>Terms — MRG</title>
+  <link rel="icon" href="/static/icons/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="nav-brand" href="/" aria-label="MRG home">
+        <img src="/static/icons/logo.svg" width="36" height="36" alt="">
+        <span>MRG</span>
+      </a>
+      <ul class="nav-links" role="list"><li><a href="/#use-cases">Use cases</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/institutions">Institutions</a></li><li><a href="/demo">Demo</a></li><li><a href="/faq">FAQ</a></li></ul>
+      <div class="nav-cta">
+        <a class="btn btn-ghost" href="/onboarding">Sign in</a>
+        <a class="btn btn-primary" href="/onboarding">Get started</a>
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="mobile-nav"><span class="sr-only">Menu</span>☰</button>
+      </div>
+    </div>
+    <nav id="mobile-nav" class="nav-mobile" hidden>
+      <a href="/pricing">Pricing</a>
+      <a href="/institutions">Institutions</a>
+      <a href="/demo">Demo</a>
+      <a href="/faq">FAQ</a>
+      <a href="/onboarding">Get started</a>
+    </nav>
+  </header>
+  <main id="main">
+<section class="section"><div class="container" style="max-width:720px">
+<h1 class="section-title">Terms of use</h1>
+<p class="text-muted">Template — not legal advice. MRG provides simulation tools for practice. Prices are illustrative until confirmed at checkout or in a written order.</p>
+</div></section>
+</main>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand"><strong>MRG — Integrated Simulation Suite</strong> Practice composure when rare, high-impact events unfold.</div>
+      <div class="footer-col"><h4>Product</h4><ul><li><a href="/demo">Demo</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/dashboard">Dashboard</a></li></ul></div>
+      <div class="footer-col"><h4>Institutions</h4><ul><li><a href="/institutions">Licensing</a></li><li><a href="/security">Security</a></li><li><a href="/contact">Contact</a></li></ul></div>
+      <div class="footer-col"><h4>Support</h4><ul><li><a href="/faq">FAQ</a></li><li><a href="/accessibility">Accessibility</a></li><li><a href="/legal/privacy">Privacy</a></li><li><a href="/legal/terms">Terms</a></li></ul></div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© Odynex Axis Logistics LLC. Prices illustrative.</span>
+      <span><a href="/healthz">Status</a></span>
+    </div>
+  </footer>
+  <script src="/static/js/app.js" defer></script>
+</body>
+</html>

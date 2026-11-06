@@ -1,6 +1,4 @@
-"""
-MRG Integrated Simulation Suite — application entrypoint.
-"""
+"""MRG Integrated Simulation Suite — serves complete static HTML pages + API + WebSocket."""
 
 from __future__ import annotations
 
@@ -13,7 +11,6 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 
 from mrg import __version__
 from mrg.core.config import get_settings
@@ -21,50 +18,31 @@ from mrg.core.pricing import INSTITUTIONAL_RANGES, list_public_plans
 from mrg.core.security import RateLimitMiddleware, SecurityHeadersMiddleware, SimpleRateLimiter
 from mrg.services.simulation import SimulationSession, run_sandbox_simulation
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s [%(name)s] %(message)s")
 logger = logging.getLogger("mrg")
 
 
 def _resolve_root() -> Path:
-    """Locate project root containing templates/ and static/."""
-    candidates = [
-        Path(__file__).resolve().parents[1],  # package parent (dev + Docker /app)
-        Path.cwd(),
-        Path(os.environ.get("MRG_ROOT", "")),
-    ]
-    for c in candidates:
-        if c and (c / "templates").is_dir() and (c / "static").is_dir():
+    for c in (Path(__file__).resolve().parents[1], Path.cwd(), Path(os.environ.get("MRG_ROOT", ""))):
+        if c and (c / "static").is_dir():
             return c
-    # Fall back to package parent even if dirs missing (will error clearly at render)
     return Path(__file__).resolve().parents[1]
 
 
 ROOT = _resolve_root()
 STATIC_DIR = ROOT / "static"
-TEMPLATES_DIR = ROOT / "templates"
-
 settings = get_settings()
-
-if not TEMPLATES_DIR.is_dir():
-    logger.error("Templates directory missing: %s", TEMPLATES_DIR)
-if not STATIC_DIR.is_dir():
-    logger.error("Static directory missing: %s", STATIC_DIR)
-
-templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info(
-        "Starting MRG v%s env=%s root=%s billing=%s templates=%s",
+        "Starting MRG v%s env=%s root=%s static=%s index=%s",
         __version__,
         settings.environment,
         ROOT,
-        settings.billing_configured,
-        TEMPLATES_DIR.is_dir(),
+        STATIC_DIR.is_dir(),
+        (STATIC_DIR / "index.html").is_file(),
     )
     yield
     logger.info("Shutting down MRG")
@@ -77,7 +55,6 @@ app = FastAPI(
     redoc_url=None,
     lifespan=lifespan,
 )
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
@@ -92,11 +69,22 @@ if STATIC_DIR.is_dir():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
-# ---------------------------------------------------------------------------
-# Health & readiness (GET + HEAD for Fly / load balancers)
-# ---------------------------------------------------------------------------
+def _html(name: str):
+    path = STATIC_DIR / name
+    if path.is_file():
+        return FileResponse(path, media_type="text/html; charset=utf-8")
+    alt = ROOT / name
+    if alt.is_file():
+        return FileResponse(alt, media_type="text/html; charset=utf-8")
+    return HTMLResponse(
+        "<!DOCTYPE html><html><body style='background:#0a0c10;color:#e8ecf4;font-family:system-ui;padding:2rem'>"
+        f"<h1>Missing {name}</h1><p>Redeploy the full package including static/.</p>"
+        "<p><a href='/' style='color:#ff6b1a'>Home</a></p></body></html>",
+        status_code=404,
+    )
 
-def _health_body() -> dict:
+
+def _health_body():
     return {
         "status": "ok",
         "version": __version__,
@@ -119,16 +107,11 @@ async def readyz():
         "status": "ready",
         "version": __version__,
         "billing_configured": settings.billing_configured,
-        "deepseek_configured": settings.deepseek_configured,
         "websocket_enabled": settings.enable_websocket_simulation,
-        "templates_ok": TEMPLATES_DIR.is_dir(),
         "static_ok": STATIC_DIR.is_dir(),
+        "index_ok": (STATIC_DIR / "index.html").is_file(),
     }
 
-
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
 
 @app.get("/api/pricing")
 async def api_pricing():
@@ -136,12 +119,7 @@ async def api_pricing():
         "currency": "USD",
         "plans": list_public_plans(),
         "institutional_ranges": INSTITUTIONAL_RANGES,
-        "notes": [
-            "Prices are illustrative and subject to change.",
-            "Taxes and payment-processor fees may apply.",
-            "Nonprofit/Education requires verification.",
-            "Enterprise and institutional buy-out terms are subject to written agreement.",
-        ],
+        "notes": ["Prices are illustrative.", "Taxes may apply.", "Enterprise terms require written agreement."],
     }
 
 
@@ -152,28 +130,16 @@ async def api_version():
 
 @app.post("/api/feedback")
 async def api_feedback(request: Request):
-    """Lightweight feedback endpoint — stores nothing sensitive by default."""
     try:
         body = await request.json()
     except Exception:
         return JSONResponse({"detail": "Invalid JSON"}, status_code=400)
     message = str(body.get("message", ""))[:2000]
-    email = str(body.get("email", ""))[:200]
-    category = str(body.get("category", "general"))[:40]
     if not message.strip():
         return JSONResponse({"detail": "Message is required"}, status_code=400)
-    logger.info(
-        "Feedback received category=%s email=%s len=%d",
-        category,
-        bool(email),
-        len(message),
-    )
+    logger.info("Feedback len=%d", len(message))
     return {"status": "received", "message": "Thank you. We review feedback regularly."}
 
-
-# ---------------------------------------------------------------------------
-# WebSocket simulation (sandbox)
-# ---------------------------------------------------------------------------
 
 @app.websocket("/ws/simulation")
 async def ws_simulation(websocket: WebSocket):
@@ -183,18 +149,12 @@ async def ws_simulation(websocket: WebSocket):
     await websocket.accept()
     session = SimulationSession()
     try:
-        await websocket.send_json(
-            {
-                "type": "welcome",
-                "message": 'MRG simulation channel ready. Send {"action": "start"}.',
-            }
-        )
+        await websocket.send_json({"type": "welcome", "message": 'Send {"action": "start"}.'})
         while True:
             data = await websocket.receive_json()
             action = data.get("action")
             if action == "start":
-                scenario = data.get("scenario", "black_swan_supply")
-                async for event in run_sandbox_simulation(session, scenario):
+                async for event in run_sandbox_simulation(session, data.get("scenario", "black_swan_supply")):
                     await websocket.send_json(event)
             elif action == "ping":
                 await websocket.send_json({"type": "pong"})
@@ -202,14 +162,9 @@ async def ws_simulation(websocket: WebSocket):
                 await websocket.send_json({"type": "stopped"})
                 break
             else:
-                await websocket.send_json(
-                    {
-                        "type": "error",
-                        "message": "Unknown action. Use start, ping, or stop.",
-                    }
-                )
+                await websocket.send_json({"type": "error", "message": "Unknown action."})
     except WebSocketDisconnect:
-        logger.debug("WebSocket client disconnected")
+        pass
     except Exception as exc:
         logger.exception("WebSocket error: %s", exc)
         try:
@@ -218,93 +173,64 @@ async def ws_simulation(websocket: WebSocket):
             pass
 
 
-# ---------------------------------------------------------------------------
-# HTML pages
-# ---------------------------------------------------------------------------
-
-def _page(request: Request, name: str, **ctx):
-    if not TEMPLATES_DIR.is_dir():
-        return HTMLResponse(
-            "<h1>MRG misconfigured</h1><p>Templates directory not found. "
-            "Deploy the full package (templates/ and static/ next to the app).</p>",
-            status_code=500,
-        )
-    return templates.TemplateResponse(
-        request,
-        name,
-        {
-            "app_name": settings.app_name,
-            "version": __version__,
-            "public_base_url": settings.public_base_url,
-            "environment": settings.environment,
-            **ctx,
-        },
-    )
+@app.get("/")
+async def home():
+    return _html("index.html")
 
 
-@app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    return _page(request, "index.html", plans=list_public_plans())
+@app.get("/pricing")
+async def pricing_page():
+    return _html("pricing.html")
 
 
-@app.get("/pricing", response_class=HTMLResponse)
-async def pricing_page(request: Request):
-    return _page(request, "pricing.html", plans=list_public_plans())
+@app.get("/institutions")
+async def institutions_page():
+    return _html("institutions.html")
 
 
-@app.get("/institutions", response_class=HTMLResponse)
-async def institutions_page(request: Request):
-    return _page(
-        request,
-        "institutions.html",
-        ranges=INSTITUTIONAL_RANGES,
-        plans=list_public_plans(),
-    )
+@app.get("/demo")
+async def demo_page():
+    return _html("demo.html")
 
 
-@app.get("/demo", response_class=HTMLResponse)
-async def demo_page(request: Request):
-    return _page(request, "demo.html")
+@app.get("/onboarding")
+async def onboarding_page():
+    return _html("onboarding.html")
 
 
-@app.get("/onboarding", response_class=HTMLResponse)
-async def onboarding_page(request: Request):
-    return _page(request, "onboarding.html")
+@app.get("/dashboard")
+async def dashboard_page():
+    return _html("dashboard.html")
 
 
-@app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard_page(request: Request):
-    return _page(request, "dashboard.html")
+@app.get("/faq")
+async def faq_page():
+    return _html("faq.html")
 
 
-@app.get("/faq", response_class=HTMLResponse)
-async def faq_page(request: Request):
-    return _page(request, "faq.html")
+@app.get("/security")
+async def security_page():
+    return _html("security.html")
 
 
-@app.get("/security", response_class=HTMLResponse)
-async def security_page(request: Request):
-    return _page(request, "security.html")
+@app.get("/accessibility")
+async def accessibility_page():
+    return _html("accessibility.html")
 
 
-@app.get("/accessibility", response_class=HTMLResponse)
-async def accessibility_page(request: Request):
-    return _page(request, "accessibility.html")
+@app.get("/contact")
+async def contact_page():
+    return _html("contact.html")
 
 
-@app.get("/contact", response_class=HTMLResponse)
-async def contact_page(request: Request):
-    return _page(request, "contact.html")
+@app.get("/legal/terms")
+async def terms_page():
+    return _html("legal_terms.html")
 
 
-@app.get("/legal/terms", response_class=HTMLResponse)
-async def terms_page(request: Request):
-    return _page(request, "legal_terms.html")
-
-
-@app.get("/legal/privacy", response_class=HTMLResponse)
-async def privacy_page(request: Request):
-    return _page(request, "legal_privacy.html")
+@app.get("/legal/privacy")
+async def privacy_page():
+    return _html("legal_privacy.html")
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -313,17 +239,3 @@ async def favicon():
     if path.exists():
         return FileResponse(path, media_type="image/svg+xml")
     return Response(status_code=204)
-
-
-@app.exception_handler(Exception)
-async def unhandled(request: Request, exc: Exception):
-    logger.exception("Unhandled error on %s: %s", request.url.path, exc)
-    if request.url.path.startswith("/api/"):
-        return JSONResponse(
-            {"detail": "An unexpected error occurred. Please try again later."},
-            status_code=500,
-        )
-    return JSONResponse(
-        {"detail": "An unexpected error occurred."},
-        status_code=500,
-    )

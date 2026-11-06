@@ -1,122 +1,71 @@
-{% extends "base.html" %}
-{% block title %}Demo — MRG{% endblock %}
-
-{% block content %}
-<section class="section">
-  <div class="container" style="max-width:720px">
-    <h1 class="section-title">Interactive sandbox demo</h1>
-    <p class="section-sub">
-      Run a short Black Swan-style scenario over a live WebSocket connection.
-      All metrics are simulated and labeled. No account required.
-    </p>
-
-    <div class="form-group">
-      <label for="scenario">Scenario</label>
-      <select id="scenario">
-        <option value="black_swan_supply">Supply Chain Black Swan</option>
-        <option value="cyber_cascade">Cascading Cyber Event</option>
-        <option value="macro_shock">Macro Policy Shock</option>
-      </select>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MRG Integrated Simulation Suite — practice composure under rare, high-impact pressure.">
+  <meta name="theme-color" content="#0a0c10">
+  <title>Demo — MRG</title>
+  <link rel="icon" href="/static/icons/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="nav-brand" href="/" aria-label="MRG home">
+        <img src="/static/icons/logo.svg" width="36" height="36" alt="">
+        <span>MRG</span>
+      </a>
+      <ul class="nav-links" role="list"><li><a href="/#use-cases">Use cases</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/institutions">Institutions</a></li><li><a href="/demo" aria-current="page">Demo</a></li><li><a href="/faq">FAQ</a></li></ul>
+      <div class="nav-cta">
+        <a class="btn btn-ghost" href="/onboarding">Sign in</a>
+        <a class="btn btn-primary" href="/onboarding">Get started</a>
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="mobile-nav"><span class="sr-only">Menu</span>☰</button>
+      </div>
     </div>
-
-    <div class="hero-actions mb-2">
-      <button type="button" class="btn btn-primary" id="start-btn">Start simulation</button>
-      <button type="button" class="btn btn-secondary" id="stop-btn" disabled>Stop</button>
-    </div>
-
-    <div class="alert alert-info" id="status">Ready. Click Start to connect.</div>
-    <div class="sim-log" id="log" role="log" aria-live="polite" aria-relevant="additions"></div>
-  </div>
-</section>
-{% endblock %}
-
-{% block scripts %}
+    <nav id="mobile-nav" class="nav-mobile" hidden>
+      <a href="/pricing">Pricing</a>
+      <a href="/institutions">Institutions</a>
+      <a href="/demo">Demo</a>
+      <a href="/faq">FAQ</a>
+      <a href="/onboarding">Get started</a>
+    </nav>
+  </header>
+  <main id="main">
+<section class="section"><div class="container" style="max-width:720px">
+<h1 class="section-title">Interactive sandbox demo</h1>
+<p class="section-sub">All metrics are simulated. No account required.</p>
+<div class="form-group"><label for="scenario">Scenario</label>
+<select id="scenario"><option value="black_swan_supply">Supply Chain Black Swan</option><option value="cyber_cascade">Cascading Cyber Event</option><option value="macro_shock">Macro Policy Shock</option></select></div>
+<div class="hero-actions mb-2"><button type="button" class="btn btn-primary" id="start-btn">Start simulation</button><button type="button" class="btn btn-secondary" id="stop-btn" disabled>Stop</button></div>
+<div class="alert alert-info" id="status">Ready. Click Start to connect.</div>
+<div class="sim-log" id="log" role="log" aria-live="polite"></div>
+</div></section>
 <script>
-(function () {
-  const logEl = document.getElementById("log");
-  const statusEl = document.getElementById("status");
-  const startBtn = document.getElementById("start-btn");
-  const stopBtn = document.getElementById("stop-btn");
-  const scenarioEl = document.getElementById("scenario");
-  let ws = null;
-
-  function addLine(text, cls) {
-    const div = document.createElement("div");
-    div.className = "line" + (cls ? " " + cls : "");
-    div.textContent = text;
-    logEl.appendChild(div);
-    logEl.scrollTop = logEl.scrollHeight;
-  }
-
-  function setStatus(msg, kind) {
-    statusEl.textContent = msg;
-    statusEl.className = "alert alert-" + (kind || "info");
-  }
-
-  startBtn.addEventListener("click", function () {
-    if (ws) return;
-    logEl.innerHTML = "";
-    const proto = location.protocol === "https:" ? "wss:" : "ws:";
-    ws = new WebSocket(proto + "//" + location.host + "/ws/simulation");
-    setStatus("Connecting…", "info");
-    startBtn.disabled = true;
-    stopBtn.disabled = false;
-
-    ws.onopen = function () {
-      setStatus("Connected. Starting scenario…", "success");
-      ws.send(JSON.stringify({ action: "start", scenario: scenarioEl.value }));
-    };
-    ws.onmessage = function (ev) {
-      try {
-        const data = JSON.parse(ev.data);
-        if (data.type === "scenario_start") {
-          addLine("▶ " + data.title + " — " + data.description, "event");
-        } else if (data.type === "step") {
-          addLine("[" + data.index + "/" + data.total + "] " + data.text);
-        } else if (data.type === "metrics_update") {
-          const m = data.metrics;
-          addLine("Metrics (simulated): composure " + m.composure_score + ", stress " + m.vocal_stress_index, "event");
-        } else if (data.type === "scenario_complete") {
-          const m = data.metrics;
-          addLine("Complete — composure " + m.composure_score + " · " + data.debrief, "complete");
-          setStatus("Scenario complete. Metrics are simulated.", "success");
-          startBtn.disabled = false;
-          stopBtn.disabled = true;
-          ws.close();
-          ws = null;
-        } else if (data.type === "error") {
-          addLine("Error: " + data.message);
-        }
-      } catch (e) {
-        addLine(ev.data);
-      }
-    };
-    ws.onerror = function () {
-      setStatus("Connection error. Is the server running?", "warning");
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-      ws = null;
-    };
-    ws.onclose = function () {
-      if (startBtn.disabled) {
-        setStatus("Disconnected.", "info");
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
-      }
-      ws = null;
-    };
-  });
-
-  stopBtn.addEventListener("click", function () {
-    if (ws) {
-      try { ws.send(JSON.stringify({ action: "stop" })); } catch (e) {}
-      ws.close();
-      ws = null;
-    }
-    setStatus("Stopped.", "info");
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
-  });
-})();
+(function(){const logEl=document.getElementById("log"),statusEl=document.getElementById("status"),startBtn=document.getElementById("start-btn"),stopBtn=document.getElementById("stop-btn"),scenarioEl=document.getElementById("scenario");let ws=null;
+function addLine(t,c){const d=document.createElement("div");d.className="line"+(c?" "+c:"");d.textContent=t;logEl.appendChild(d);logEl.scrollTop=logEl.scrollHeight;}
+function setStatus(m,k){statusEl.textContent=m;statusEl.className="alert alert-"+(k||"info");}
+startBtn.onclick=function(){if(ws)return;logEl.innerHTML="";const p=location.protocol==="https:"?"wss:":"ws:";ws=new WebSocket(p+"//"+location.host+"/ws/simulation");setStatus("Connecting…");startBtn.disabled=true;stopBtn.disabled=false;
+ws.onopen=function(){setStatus("Connected. Starting…","success");ws.send(JSON.stringify({action:"start",scenario:scenarioEl.value}));};
+ws.onmessage=function(ev){try{const data=JSON.parse(ev.data);if(data.type==="scenario_start")addLine("▶ "+data.title+" — "+data.description,"event");else if(data.type==="step")addLine("["+data.index+"/"+data.total+"] "+data.text);else if(data.type==="metrics_update")addLine("Metrics (simulated): composure "+data.metrics.composure_score,"event");else if(data.type==="scenario_complete"){addLine("Complete — composure "+data.metrics.composure_score+" · "+data.debrief,"complete");setStatus("Complete. Metrics simulated.","success");startBtn.disabled=false;stopBtn.disabled=true;ws.close();ws=null;}}catch(e){addLine(ev.data);}};
+ws.onerror=function(){setStatus("Connection error — is /ws/simulation available on this deploy?","warning");startBtn.disabled=false;stopBtn.disabled=true;ws=null;};
+ws.onclose=function(){if(startBtn.disabled){setStatus("Disconnected.");startBtn.disabled=false;stopBtn.disabled=true;}ws=null;};};
+stopBtn.onclick=function(){if(ws){try{ws.send(JSON.stringify({action:"stop"}));}catch(e){}ws.close();ws=null;}setStatus("Stopped.");startBtn.disabled=false;stopBtn.disabled=true;};})();
 </script>
-{% endblock %}
+</main>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand"><strong>MRG — Integrated Simulation Suite</strong> Practice composure when rare, high-impact events unfold.</div>
+      <div class="footer-col"><h4>Product</h4><ul><li><a href="/demo">Demo</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/dashboard">Dashboard</a></li></ul></div>
+      <div class="footer-col"><h4>Institutions</h4><ul><li><a href="/institutions">Licensing</a></li><li><a href="/security">Security</a></li><li><a href="/contact">Contact</a></li></ul></div>
+      <div class="footer-col"><h4>Support</h4><ul><li><a href="/faq">FAQ</a></li><li><a href="/accessibility">Accessibility</a></li><li><a href="/legal/privacy">Privacy</a></li><li><a href="/legal/terms">Terms</a></li></ul></div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© Odynex Axis Logistics LLC. Prices illustrative.</span>
+      <span><a href="/healthz">Status</a></span>
+    </div>
+  </footer>
+  <script src="/static/js/app.js" defer></script>
+</body>
+</html>

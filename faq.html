@@ -1,39 +1,58 @@
-{% extends "base.html" %}
-{% block title %}FAQ — MRG{% endblock %}
-
-{% block content %}
-<section class="section">
-  <div class="container" style="max-width:720px">
-    <h1 class="section-title">Frequently asked questions</h1>
-
-    <article class="card mb-2">
-      <h3>What is MRG?</h3>
-      <p class="text-muted">MRG is an integrated simulation suite for practicing composure and decision-making under rare, high-impact pressure. It is designed for individuals, teams, and institutions.</p>
-    </article>
-    <article class="card mb-2">
-      <h3>Is this predictive software?</h3>
-      <p class="text-muted">No. MRG does not claim to predict black swan events. It helps you practice responses so you are better prepared if something unusual happens.</p>
-    </article>
-    <article class="card mb-2">
-      <h3>Do I need an account?</h3>
-      <p class="text-muted">You can try the public demo without an account. Free and paid plans use a simple onboarding flow. Full SSO is available for enterprise deployments that configure it.</p>
-    </article>
-    <article class="card mb-2">
-      <h3>Are the metrics real?</h3>
-      <p class="text-muted">Demo and sandbox metrics are labeled simulated. Deployments that connect approved models and sensors can produce richer feedback; those integrations are optional and documented.</p>
-    </article>
-    <article class="card mb-2">
-      <h3>How does billing work?</h3>
-      <p class="text-muted">Public plans are listed on the Pricing page. Checkout remains in demo mode until an operator configures Stripe secrets on the server. We never charge without that configuration.</p>
-    </article>
-    <article class="card mb-2">
-      <h3>Can my organization buy a perpetual license?</h3>
-      <p class="text-muted">Yes — see Institutional licensing. A buy-out is a negotiated perpetual license with defined rights and support years. It does not automatically transfer IP ownership unless the contract says so.</p>
-    </article>
-    <article class="card mb-2">
-      <h3>Is the product accessible?</h3>
-      <p class="text-muted">We aim for WCAG 2.2 AA on core flows: semantic HTML, keyboard navigation, visible focus, contrast, and labels. See the Accessibility page for status and how to report issues.</p>
-    </article>
-  </div>
-</section>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MRG Integrated Simulation Suite — practice composure under rare, high-impact pressure.">
+  <meta name="theme-color" content="#0a0c10">
+  <title>FAQ — MRG</title>
+  <link rel="icon" href="/static/icons/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="nav-brand" href="/" aria-label="MRG home">
+        <img src="/static/icons/logo.svg" width="36" height="36" alt="">
+        <span>MRG</span>
+      </a>
+      <ul class="nav-links" role="list"><li><a href="/#use-cases">Use cases</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/institutions">Institutions</a></li><li><a href="/demo">Demo</a></li><li><a href="/faq" aria-current="page">FAQ</a></li></ul>
+      <div class="nav-cta">
+        <a class="btn btn-ghost" href="/onboarding">Sign in</a>
+        <a class="btn btn-primary" href="/onboarding">Get started</a>
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="mobile-nav"><span class="sr-only">Menu</span>☰</button>
+      </div>
+    </div>
+    <nav id="mobile-nav" class="nav-mobile" hidden>
+      <a href="/pricing">Pricing</a>
+      <a href="/institutions">Institutions</a>
+      <a href="/demo">Demo</a>
+      <a href="/faq">FAQ</a>
+      <a href="/onboarding">Get started</a>
+    </nav>
+  </header>
+  <main id="main">
+<section class="section"><div class="container" style="max-width:720px">
+<h1 class="section-title">FAQ</h1>
+<article class="card mb-2"><h3>What is MRG?</h3><p class="text-muted">Simulation suite for practicing composure under rare, high-impact pressure.</p></article>
+<article class="card mb-2"><h3>Predictive?</h3><p class="text-muted">No. Practice only — we do not claim to predict events.</p></article>
+<article class="card mb-2"><h3>Are metrics real?</h3><p class="text-muted">Demo metrics are labeled simulated.</p></article>
+<article class="card mb-2"><h3>Billing?</h3><p class="text-muted">Demo checkout until Stripe is configured on the server.</p></article>
+</div></section>
+</main>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand"><strong>MRG — Integrated Simulation Suite</strong> Practice composure when rare, high-impact events unfold.</div>
+      <div class="footer-col"><h4>Product</h4><ul><li><a href="/demo">Demo</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/dashboard">Dashboard</a></li></ul></div>
+      <div class="footer-col"><h4>Institutions</h4><ul><li><a href="/institutions">Licensing</a></li><li><a href="/security">Security</a></li><li><a href="/contact">Contact</a></li></ul></div>
+      <div class="footer-col"><h4>Support</h4><ul><li><a href="/faq">FAQ</a></li><li><a href="/accessibility">Accessibility</a></li><li><a href="/legal/privacy">Privacy</a></li><li><a href="/legal/terms">Terms</a></li></ul></div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© Odynex Axis Logistics LLC. Prices illustrative.</span>
+      <span><a href="/healthz">Status</a></span>
+    </div>
+  </footer>
+  <script src="/static/js/app.js" defer></script>
+</body>
+</html>
