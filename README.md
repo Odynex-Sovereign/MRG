@@ -115,9 +115,11 @@ docker run --rm -p 8000:8000 -e SECRET_KEY=dev-only mrg:local
 
 ## Fly.io deployment
 
+**Important:** This package is a full replacement. Deploy the entire directory — do not copy individual HTML files into an older MRG image. Templates must be rendered by `mrg.main:app` (Jinja2). Serving `.html` files as static assets will show raw `{% ... %}` syntax in the browser.
+
 ```bash
-# Install flyctl, then:
-fly launch --no-deploy   # or use existing fly.toml
+# From this repo root (mrg-product / MRG):
+fly launch --no-deploy   # first time only; app name "mrg" matches fly.toml
 fly secrets set SECRET_KEY="$(openssl rand -hex 32)"
 # Optional:
 # fly secrets set STRIPE_SECRET_KEY=sk_live_...
@@ -125,6 +127,16 @@ fly secrets set SECRET_KEY="$(openssl rand -hex 32)"
 fly deploy
 fly status
 fly logs
+```
+
+After deploy, verify:
+
+```bash
+curl -s https://mrg.fly.dev/healthz
+# Expect: "status":"ok" and "version":"2.0.0"
+
+curl -s https://mrg.fly.dev/ | head
+# Expect: real HTML (<!DOCTYPE html>), NOT raw {% extends %}
 ```
 
 Useful operations:
@@ -136,7 +148,8 @@ fly releases
 fly deploy --image-label rollback   # or redeploy prior release
 ```
 
-Health checks hit `/healthz`. The process binds `0.0.0.0:$PORT`.
+Health checks hit `/healthz` (GET/HEAD). The process binds `0.0.0.0:$PORT`.
+Entry point: `uvicorn mrg.main:app`.
 
 ## Security model (accurate)
 

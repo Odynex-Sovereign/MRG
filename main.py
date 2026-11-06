@@ -5,12 +5,13 @@ MRG Integrated Simulation Suite — application entrypoint.
 from __future__ import annotations
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -26,21 +27,44 @@ logging.basicConfig(
 )
 logger = logging.getLogger("mrg")
 
-ROOT = Path(__file__).resolve().parents[1]
+
+def _resolve_root() -> Path:
+    """Locate project root containing templates/ and static/."""
+    candidates = [
+        Path(__file__).resolve().parents[1],  # package parent (dev + Docker /app)
+        Path.cwd(),
+        Path(os.environ.get("MRG_ROOT", "")),
+    ]
+    for c in candidates:
+        if c and (c / "templates").is_dir() and (c / "static").is_dir():
+            return c
+    # Fall back to package parent even if dirs missing (will error clearly at render)
+    return Path(__file__).resolve().parents[1]
+
+
+ROOT = _resolve_root()
 STATIC_DIR = ROOT / "static"
 TEMPLATES_DIR = ROOT / "templates"
 
 settings = get_settings()
+
+if not TEMPLATES_DIR.is_dir():
+    logger.error("Templates directory missing: %s", TEMPLATES_DIR)
+if not STATIC_DIR.is_dir():
+    logger.error("Static directory missing: %s", STATIC_DIR)
+
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info(
-        "Starting MRG v%s env=%s billing=%s",
+        "Starting MRG v%s env=%s root=%s billing=%s templates=%s",
         __version__,
         settings.environment,
+        ROOT,
         settings.billing_configured,
+        TEMPLATES_DIR.is_dir(),
     )
     yield
     logger.info("Shutting down MRG")
@@ -58,31 +82,38 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "HEAD", "OPTIONS"],
     allow_headers=["*"],
 )
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RateLimitMiddleware, limiter=SimpleRateLimiter(settings.rate_limit_rpm))
 
-if STATIC_DIR.exists():
+if STATIC_DIR.is_dir():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
 # ---------------------------------------------------------------------------
-# Health & readiness
+# Health & readiness (GET + HEAD for Fly / load balancers)
 # ---------------------------------------------------------------------------
 
-@app.get("/healthz", include_in_schema=False)
-@app.get("/livez", include_in_schema=False)
-async def healthz():
+def _health_body() -> dict:
     return {
         "status": "ok",
         "version": __version__,
         "environment": settings.environment,
+        "engine": "MRG Integrated Simulation Suite",
+        "mode": "sandbox" if not settings.deepseek_configured else "live-models",
+        "billing_configured": settings.billing_configured,
     }
 
 
-@app.get("/readyz", include_in_schema=False)
+@app.api_route("/healthz", methods=["GET", "HEAD"], include_in_schema=False)
+@app.api_route("/livez", methods=["GET", "HEAD"], include_in_schema=False)
+async def healthz():
+    return _health_body()
+
+
+@app.api_route("/readyz", methods=["GET", "HEAD"], include_in_schema=False)
 async def readyz():
     return {
         "status": "ready",
@@ -90,6 +121,8 @@ async def readyz():
         "billing_configured": settings.billing_configured,
         "deepseek_configured": settings.deepseek_configured,
         "websocket_enabled": settings.enable_websocket_simulation,
+        "templates_ok": TEMPLATES_DIR.is_dir(),
+        "static_ok": STATIC_DIR.is_dir(),
     }
 
 
@@ -129,8 +162,12 @@ async def api_feedback(request: Request):
     category = str(body.get("category", "general"))[:40]
     if not message.strip():
         return JSONResponse({"detail": "Message is required"}, status_code=400)
-    logger.info("Feedback received category=%s email=%s len=%d", category, bool(email), len(message))
-    # In production you would forward to an issue tracker or email.
+    logger.info(
+        "Feedback received category=%s email=%s len=%d",
+        category,
+        bool(email),
+        len(message),
+    )
     return {"status": "received", "message": "Thank you. We review feedback regularly."}
 
 
@@ -146,7 +183,12 @@ async def ws_simulation(websocket: WebSocket):
     await websocket.accept()
     session = SimulationSession()
     try:
-        await websocket.send_json({"type": "welcome", "message": "MRG simulation channel ready. Send {\"action\": \"start\"}."})
+        await websocket.send_json(
+            {
+                "type": "welcome",
+                "message": 'MRG simulation channel ready. Send {"action": "start"}.',
+            }
+        )
         while True:
             data = await websocket.receive_json()
             action = data.get("action")
@@ -160,7 +202,12 @@ async def ws_simulation(websocket: WebSocket):
                 await websocket.send_json({"type": "stopped"})
                 break
             else:
-                await websocket.send_json({"type": "error", "message": "Unknown action. Use start, ping, or stop."})
+                await websocket.send_json(
+                    {
+                        "type": "error",
+                        "message": "Unknown action. Use start, ping, or stop.",
+                    }
+                )
     except WebSocketDisconnect:
         logger.debug("WebSocket client disconnected")
     except Exception as exc:
@@ -176,6 +223,12 @@ async def ws_simulation(websocket: WebSocket):
 # ---------------------------------------------------------------------------
 
 def _page(request: Request, name: str, **ctx):
+    if not TEMPLATES_DIR.is_dir():
+        return HTMLResponse(
+            "<h1>MRG misconfigured</h1><p>Templates directory not found. "
+            "Deploy the full package (templates/ and static/ next to the app).</p>",
+            status_code=500,
+        )
     return templates.TemplateResponse(
         request,
         name,
@@ -254,16 +307,14 @@ async def privacy_page(request: Request):
     return _page(request, "legal_privacy.html")
 
 
-# Fallback for favicon
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
     path = STATIC_DIR / "icons" / "favicon.svg"
     if path.exists():
         return FileResponse(path, media_type="image/svg+xml")
-    return JSONResponse({"detail": "Not found"}, status_code=404)
+    return Response(status_code=204)
 
 
-# Global exception handler for cleaner API errors
 @app.exception_handler(Exception)
 async def unhandled(request: Request, exc: Exception):
     logger.exception("Unhandled error on %s: %s", request.url.path, exc)
