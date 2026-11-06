@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from collections import defaultdict
+from collections import defaultdict, deque
 from threading import Lock
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -40,7 +40,7 @@ class SimpleRateLimiter:
 
     def __init__(self, requests_per_minute: int = 120) -> None:
         self.rpm = requests_per_minute
-        self._hits: dict[str, list[float]] = defaultdict(list)
+        self._hits: dict[str, deque[float]] = defaultdict(deque)
         self._lock = Lock()
 
     def allow(self, key: str) -> bool:
@@ -48,11 +48,15 @@ class SimpleRateLimiter:
         window = 60.0
         with self._lock:
             timestamps = self._hits[key]
-            # prune
-            self._hits[key] = [t for t in timestamps if now - t < window]
-            if len(self._hits[key]) >= self.rpm:
+            while timestamps and now - timestamps[0] >= window:
+                timestamps.popleft()
+
+            if len(timestamps) >= self.rpm:
                 return False
-            self._hits[key].append(now)
+
+            timestamps.append(now)
+            if not timestamps:
+                self._hits.pop(key, None)
             return True
 
 
