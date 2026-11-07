@@ -14,7 +14,7 @@ STRIPE_PRICE_MAPPING = {
 def create_production_checkout(user_id: str, plan_name: str, customer_email: str = None):
     price_id = STRIPE_PRICE_MAPPING.get(plan_name)
     if not price_id:
-        raise ValueError(f"No configured price ID for tier: {plan_name}")
+        raise ValueError(f"No configured price ID mapped for tier: {plan_name}")
     
     checkout_session = stripe.checkout.Session.create(
         customer_email=customer_email,
