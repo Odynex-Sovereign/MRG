@@ -1,52 +1,16 @@
-name: MRG Production Enterprise Deploy Engine
-
+name: MRG Production CI/CD
 on:
   push:
     branches: [ main ]
-
 jobs:
-  verify-and-deploy:
+  validate-and-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Source Code Tree
-        uses: actions/checkout@v4
-
-      - name: Setup Python Environment
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip'
-
-      - name: Install System Dependencies & Test Harnesses
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest flake8
-
-      - name: Execute Quality Assurance Testing Suite
-        env:
-          DATABASE_URL: "sqlite:///:memory:"
-          SECRET_KEY: "ci-testing-token-secret-hash-key"
-        run: |
+      - run: |
+          pip install -r requirements.txt pytest flake8
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          pytest -v
-
-      - name: Setup Fly.io Deployment CLI
-        uses: superfly/flyctl-actions/setup-flyctl@master
-
-      - name: Configure Secure Fleet Runtime Credentials
-        run: |
-          flyctl secrets set SECRET_KEY="${{ secrets.SECRET_KEY }}" --stage
-          flyctl secrets set DATABASE_URL="${{ secrets.DATABASE_URL }}" --stage
-          flyctl secrets set STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" --stage
-          flyctl secrets set STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" --stage
-          flyctl secrets set DISCORD_WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL }}" --stage
-          flyctl secrets set BACKUP_ENCRYPTION_KEY="${{ secrets.BACKUP_ENCRYPTION_KEY }}" --stage
-          flyctl secrets set AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" --stage
-          flyctl secrets set AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" --stage
-          flyctl secrets set AWS_BACKUP_BUCKET_NAME="${{ secrets.AWS_BACKUP_BUCKET_NAME }}" --stage
-
-      - name: Execute Blue-Green Application Release
-        run: flyctl deploy --remote-only
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          pytest
