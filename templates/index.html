@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRG Simulation Grid Control Panel</title>
+    <link href="https://cloudflare.com" rel="stylesheet">
+    <style>
+        .terminal-stream { font-family: 'Courier New', Courier, monospace; background-color: #0d1117; }
+        .stress-pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <header class="border-b border-gray-800 bg-gray-950 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-3 h-3 bg-green-500 rounded-full stress-pulse"></div>
+                <h1 class="text-xl font-bold tracking-wider text-green-400">MRG // SIMULATION_GRID</h1>
+            </div>
+            <span class="text-xs bg-gray-800 px-3 py-1 rounded text-gray-400">ENGINE v1.0.0 (LIVE)</span>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Configuration & Controls -->
+        <div class="space-y-6 lg:col-span-1">
+            <div class="bg-gray-950 p-6 rounded-lg border border-gray-800 shadow-xl">
+                <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">1. Select Target Profile</h2>
+                <div class="space-y-3">
+                    <button onclick="selectPersona('corporate')" id="btn-corporate" class="w-full text-left p-3 rounded border border-green-600 bg-green-950 bg-opacity-20 text-green-400 transition">
+                        <div class="font-bold text-sm">Victoria Vance</div>
+                        <div class="text-xs text-gray-400 mt-0.5">Corporate Governance / Activist Investor</div>
+                    </button>
+                    <button onclick="selectPersona('political')" id="btn-political" class="w-full text-left p-3 rounded border border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-700 transition">
+                        <div class="font-bold text-sm">Marcus Brody</div>
+                        <div class="text-xs text-gray-400 mt-0.5">Media Relations / Hostile Journalist</div>
+                    </button>
+                    <button onclick="selectPersona('manufacturing')" id="btn-manufacturing" class="w-full text-left p-3 rounded border border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-700 transition">
+                        <div class="font-bold text-sm">Dieter Brand</div>
+                        <div class="text-xs text-gray-400 mt-0.5">Advanced Production Floor Superintendent</div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-gray-950 p-6 rounded-lg border border-gray-800 shadow-xl">
+                <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">2. Session Orchestration</h2>
+                <div class="space-y-3">
+                    <button id="connectBtn" onclick="toggleConnection()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold p-3 rounded transition shadow-md">
+                        Initialize Simulation Loop
+                    </button>
+                    <div id="statusBadge" class="text-center text-xs font-mono text-gray-500 py-1 bg-gray-900 rounded border border-gray-800">
+                        STATUS: DISCONNECTED
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Real-Time Subscription & Metering Status Module -->
+            <div class="bg-gray-950 p-6 rounded-lg border border-gray-800 shadow-xl">
+                <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">3. Current Allocation Profile</h2>
+                <div class="p-3 bg-gray-900 rounded border border-gray-800 space-y-2 text-xs font-mono">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Account Tier:</span>
+                        <span class="text-blue-400 font-bold">Growth Tier</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Allocated Seats:</span>
+                        <span class="text-gray-300">3 / 15 active</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Billing Anchor:</span>
+                        <span class="text-green-400 underline">Lili Corporate</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Core, Metrics & Billing Ledger -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Simulated Face Metadata Display -->
+            <div class="bg-gray-950 p-6 rounded-lg border border-gray-800 shadow-xl flex flex-col md:flex-row md:space-x-6 items-center justify-center min-h-64">
+                <div class="w-40 h-40 bg-gray-900 rounded-full border-2 border-gray-800 flex items-center justify-center relative mb-4 md:mb-0">
+                    <div id="avatarEyeLeft" class="w-4 h-4 bg-green-500 rounded-full absolute top-14 left-10 transition-all duration-75"></div>
+                    <div id="avatarEyeRight" class="w-4 h-4 bg-green-500 rounded-full absolute top-14 right-10 transition-all duration-75"></div>
+                    <div id="avatarMouth" class="w-12 h-2 bg-green-500 rounded-full absolute bottom-12 transition-all duration-100"></div>
+                </div>
+                <div class="flex-1 w-full space-y-3">
+                    <div>
+                        <span class="text-xs text-gray-500 uppercase block font-mono">Live Telemetry</span>
+                        <h3 id="activePersonaName" class="text-xl font-bold text-gray-200">Victoria Vance</h3>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs font-mono text-gray-400 mb-1">
+                            <span>Composure Threshold</span>
+                            <span id="composureVal">--%</span>
+                        </div>
+                        <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                            <div id="composureBar" class="bg-green-500 h-full w-0 transition-all duration-500"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 pt-2 text-xs font-mono">
+                        <div class="p-2 bg-gray-900 border border-gray-800 rounded">
+                            <span class="text-gray-500 block">Vocal Calm</span>
+                            <span id="vocalCalmText" class="text-gray-300 font-bold">Stable</span>
+                        </div>
+                        <div class="p-2 bg-gray-900 border border-gray-800 rounded">
+                            <span class="text-gray-500 block">Micro-Expressions</span>
+                            <span id="expressionText" class="text-gray-300 font-bold">Neutral</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WebSocket Event Logs Terminal -->
+            <div class="bg-gray-950 rounded-lg border border-gray-800 shadow-xl overflow-hidden flex flex-col h-56">
+                <div class="bg-gray-900 border-b border-gray-800 p-3 flex justify-between items-center">
+                    <span class="text-xs font-mono tracking-wider text-gray-400">NETWORK PIPELINE MONITOR</span>
+                    <button onclick="clearTerminal()" class="text-xs text-gray-500 hover:text-gray-400 underline font-mono">Clear</button>
+                </div>
+                <div id="terminalStream" class="terminal-stream flex-1 p-4 overflow-y-auto text-xs font-mono text-green-400 space-y-2">
+                    <div class="text-gray-600">[system] Control UI initialized. Awaiting connection handshake.</div>
+                </div>
+            </div>
+
+            <!-- New Live Billing History Ledger Panel -->
+            <div class="bg-gray-950 rounded-lg border border-gray-800 shadow-xl overflow-hidden">
+                <div class="bg-gray-900 border-b border-gray-800 p-4">
+                    <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider font-mono">Metered Usage & Settlement Ledger</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs font-mono">
+                        <thead>
+                            <tr class="bg-gray-900 border-b border-gray-800 text-gray-400 uppercase tracking-wider">
+                                <th class="p-3">Session ID</th>
+                                <th class="p-3">Persona Profile</th>
+                                <th class="p-3">Compute Duration</th>
+                                <th class="p-3">DeepSeek Tokens</th>
+                                <th class="p-3">Audio Meter</th>
+                                <th class="p-3 text-right">Vault Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="billingLedgerBody" class="divide-y divide-gray-800 text-gray-300">
+                            <!-- Injected entries drop in here automatically -->
+                            <tr id="emptyLedgerRow">
+                                <td colspan="6" class="p-4 text-center text-gray-600 italic">No metered transactions recorded in this active window.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let ws = null;
+        let selectedPersona = 'corporate';
+      let sessionStartTime = null;
+const personaData = {
+corporate: { name: 'Victoria Vance', color: 'border-green-600 text-green-400 bg-green-950' },
+political: { name: 'Marcus Brody', color: 'border-blue-600 text-blue-400 bg-blue-950' },
+manufacturing: { name: 'Dieter Brand', color: 'border-yellow-600 text-yellow-400 bg-yellow-950' }
+};
+function selectPersona(id) {
+if (ws && ws.readyState === WebSocket.OPEN) return alert("Cannot change profile during active simulation.");
+selectedPersona = id;
+['corporate', 'political', 'manufacturing'].forEach(p => {
+const el = document.getElementById(btn-${p});
+el.className = "w-full text-left p-3 rounded border border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-700 transition";
+});
+document.getElementById(btn-${id}).className = w-full text-left p-3 rounded border ${personaData[id].color} bg-opacity-20 transition;
+document.getElementById('activePersonaName').innerText = personaData[id].name;
+logTerminal([system] Active vertical targeting swapped to: ${personaData[id].name});
+}
+function toggleConnection() {
+const btn = document.getElementById('connectBtn');
+const badge = document.getElementById('statusBadge');
+if (ws && ws.readyState === WebSocket.OPEN) {
+ws.close();
+return;
+}
+const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+const wsUrl = ${protocol}${window.location.host}/ws/simulation;
+logTerminal([pipeline] Attempting frame handshake with ${wsUrl}...);
+ws = new WebSocket(wsUrl);
+sessionStartTime = Date.now();
+ws.onopen = () => {
+btn.innerText = "Terminate Simulation Loop";
+btn.className = "w-full bg-red-600 hover:bg-red-500 text-white font-semibold p-3 rounded transition shadow-md";
+badge.innerText = "STATUS: ACTIVE LINK";
+badge.className = "text-center text-xs font-mono text-green-400 py-1 bg-green-950 bg-opacity-20 rounded border border-green-800";
+logTerminal("[pipeline] Core loop initialized. Processing container constraints.");
+};
+ws.onwebsocketevent = (event) => {}; // legacy fallback tracker
+ws.onmessage = (event) => {
+const data = JSON.parse(event.data);
+logTerminal([stream-recv] Frame event parsed: ${JSON.stringify(data)});
+if (data.type === "scenario_start") {
+document.getElementById('composureBar').style.width = "100%";
+document.getElementById('composureVal').innerText = "100%";
+animateMouth(false);
+} else if (data.type === "scenario_complete") {
+const score = data.metrics.composure_score;
+document.getElementById('composureBar').style.width = ${score}%;
+document.getElementById('composureVal').innerText = ${score}%;
+document.getElementById('vocalCalmText').innerText = "Strained";
+document.getElementById('vocalCalmText').className = "text-red-400 font-bold";
+document.getElementById('expressionText').innerText = "Micro-Sneer";
+document.getElementById('expressionText').className = "text-yellow-400 font-bold";
+animateMouth(true);
+}
+};
+ws.onclose = () => {
+btn.innerText = "Initialize Simulation Loop";
+btn.className = "w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold p-3 rounded transition shadow-md";
+badge.innerText = "STATUS: DISCONNECTED";
+badge.className = "text-center text-xs font-mono text-gray-500 py-1 bg-gray-900 rounded border border-gray-800";
+logTerminal("[pipeline] WebSocket channel detached cleanly.");
+// On socket closure, parse runtime durations and inject directly into visual ledger
+appendBillingRecord();
+resetDisplay();
+};
+}
+function appendBillingRecord() {
+if (!sessionStartTime) return;
+const durationSec = ((Date.now() - sessionStartTime) / 1000).toFixed(2);
+const durationMin = (durationSec / 60).toFixed(4);
+const tokens = Math.floor(durationSec * 15);
+const generatedId = "sim_" + Math.random().toString(36).substr(2, 9);
+const emptyRow = document.getElementById('emptyLedgerRow');
+if (emptyRow) emptyRow.remove();
+const tbody = document.getElementById('billingLedgerBody');
+const row = document.createElement('tr');
+row.className = "hover:bg-gray-900 border-b border-gray-800 transition";
+row.innerHTML = `
+${generatedId}
+${personaData[selectedPersona].name}
+\({durationMin}m (\){durationSec}s)
+${tokens}
+${durationSec}s
+Settled
+`;
+tbody.insertBefore(row, tbody.firstChild);
+}
+function logTerminal(msg) {
+const container = document.getElementById('terminalStream');
+const log = document.createElement('div');
+log.innerText = > ${msg};
+container.appendChild(log);
+container.scrollTop = container.scrollHeight;
+}
+function clearTerminal() {
+document.getElementById('terminalStream').innerHTML = '';
+}
+function animateMouth(isStressed) {
+const mouth = document.getElementById('avatarMouth');
+if (isStressed) {
+mouth.className = "w-12 h-4 bg-red-500 rounded-md absolute bottom-12 transition-all duration-100";
+} else {
+mouth.className = "w-12 h-2 bg-green-500 rounded-full absolute bottom-12 transition-all duration-100";
+}
+}
+function resetDisplay() {
+document.getElementById('composureBar').style.width = "0%";
+document.getElementById('composureVal').innerText = "--%";
+document.getElementById('vocalCalmText').innerText = "Stable";
+document.getElementById('vocalCalmText').className = "text-gray-300 font-bold";
+document.getElementById('expressionText').innerText = "Neutral";
+document.getElementById('expressionText').className = "text-gray-300 font-bold";
+animateMouth(false);
+sessionStartTime = null;
+}
