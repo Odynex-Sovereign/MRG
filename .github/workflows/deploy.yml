@@ -1,25 +1,56 @@
-name: Deploy MRG Engine to Fly.io
+name: MRG Production CI/CD Engine
 
 on:
   push:
-    branches:
-      - main  # Triggers the pipeline automatically when you save changes to main
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  deploy:
-    name: Build and Ship Premium Sensory Grid
+  validate-and-test:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout Code Repository
+      - name: Checkout Source Code Tree
         uses: actions/checkout@v4
 
-      - name: Set up Fly.io CLI Environment
+      - name: Setup Runtime Environment (Python 3.12)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Application Dependency Matrix
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest flake8
+
+      - name: Evaluate Syntactical Quality Rules (Linting)
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings.
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Execute Local Unit and Integration Suites
+        env:
+          DATABASE_URL: "sqlite:///./test_automation_cache.db"
+          ENVIRONMENT: "development"
+        run: |
+          pytest --verbose
+
+  deploy-infrastructure:
+    needs: validate-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code Tree
+        uses: actions/checkout@v4
+
+      - name: Setup Fly.io Deployment CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Build Container and Deploy to Fly Proxy
-        # Fix: Stripped the --image flag completely to block stale remote overrides
-        # The --no-cache flag forces Fly's depot to parse your new Dockerfile and requirements
-        run: flyctl deploy --no-cache --config fly.toml
+      - name: Execute Blue-Green Production Rollout
+        run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
