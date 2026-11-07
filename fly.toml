@@ -7,6 +7,7 @@ primary_region = "iad"
 [env]
   ENVIRONMENT = "production"
   PORT = "8000"
+  REDIS_URL = "redis://localhost:6379/0"
 
 [[mounts]]
   source = "mrg_storage"
