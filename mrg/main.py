@@ -83,3 +83,45 @@ def get_pricing_page(request: Request):
 @app.get("/healthz")
 def health_check():
     return {"status": "ok", "version": "2.0.0"}
+import asyncio
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from mrg.core.config import settings
+from mrg.core.database import init_db
+from mrg.routers import webhooks, simulation, auth, pages
+from mrg.services.mock_data import generate_continuous_validation_metrics
+
+app = FastAPI(title="MRG Grid Operating System Matrix Hub")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.mount("/static", StaticFiles(directory="mrg/static"), name="static")
+
+@app.on_event("startup")
+def on_startup():
+    # Initialize live physical database connections
+    init_db()
+    
+    # Fire up the continuous validation mock data monitoring engine in the background loop
+    asyncio.create_task(generate_continuous_validation_metrics())
+
+# Mount unified frontend templates, security networks, and background worker engines
+app.include_router(pages.router)
+app.include_router(webhooks.router)
+app.include_router(simulation.router)
+app.include_router(auth.router)
+
+@app.get("/healthz")
+def health_check():
+    return {"status": "ok", "version": "2.0.0"}
+
+@app.get("/readyz")
+def readiness_check():
+    return {"status": "ready"}
