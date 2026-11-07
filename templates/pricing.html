@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing Plans — MRG Simulation Grid</title>
+    <link rel="stylesheet" href="/static/main.css">
+</head>
+<body>
+    <main class="pricing-container">
+        <header class="pricing-header">
+            <h1>Select Your Access Tier</h1>
+            <p>Deploy production-ready simulations with instant settlement.</p>
+        </header>
+
+        <section class="pricing-grid">
+            <!-- Free Tier -->
+            <div class="price-card">
+                <h2>Free</h2>
+                <div class="price">$0</div>
+                <p>3 sandbox simulations per month.</p>
+                <button class="btn current-plan" disabled>Active Default Plan</button>
+            </div>
+
+            <!-- Personal Tier -->
+            <div class="price-card popular">
+                <h2>Personal</h2>
+                <div class="price">$5<span>/mo</span></div>
+                <p>Advanced digital-twin feedback matrix.</p>
+                <button class="btn checkout-btn" data-tier="Personal">Upgrade to Personal</button>
+            </div>
+
+            <!-- Pro Tier -->
+            <div class="price-card">
+                <h2>Pro</h2>
+                <div class="price">$15<span>/mo</span></div>
+                <p>Unlimited scenarios, custom engines, and API access.</p>
+                <button class="btn checkout-btn" data-tier="Pro">Upgrade to Pro</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.querySelectorAll('.checkout-btn').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                const tier = e.target.getAttribute('data-tier');
+                e.target.innerText = "Connecting secure billing...";
+                e.target.disabled = true;
+
+                try {
+                    // For production, inject active logged-in user profile attributes
+                    const response = await fetch('/api/billing/checkout?user_id=prod_user_01&plan_tier=' + tier, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Billing network response failed.');
+                    }
+
+                    const data = await response.json();
+                    if (data.url) {
+                        window.location.href = data.url; // Redirect directly to Stripe Checkout
+                    } else {
+                        alert('Could not generate a live checkout session.');
+                        e.target.innerText = "Upgrade to " + tier;
+                        e.target.disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Checkout error:', error);
+                    alert('Checkout session failed. Verify client credentials and connection state.');
+                    e.target.innerText = "Upgrade to " + tier;
+                    e.target.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
