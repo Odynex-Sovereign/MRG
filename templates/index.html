@@ -55,17 +55,22 @@
                 </div>
             </div>
 
-            <!-- Current Subscription Profile Module -->
-            <div class="bg-gray-950 p-6 rounded-lg border border-gray-800 shadow-xl">
-                <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">3. Current Allocation Profile</h2>
+            <!-- Enhanced Allocation Module featuring Direct Web Checkout Hook -->
+            <div class="bg-gray-950 p-6 rounded-lg border border-gray-800 shadow-xl space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">3. Current Allocation</h2>
+                    <button onclick="launchCheckout('enterprise')" class="bg-blue-600 hover:bg-blue-500 text-white text-2xs font-mono px-2 py-1 rounded transition shadow">
+                        ⚡ Upgrade Plan
+                    </button>
+                </div>
                 <div class="p-3 bg-gray-900 rounded border border-gray-800 space-y-2 text-xs font-mono">
                     <div class="flex justify-between">
-                        <span class="text-gray-500">Account Tier:</span>
-                        <span class="text-blue-400 font-bold">Growth Tier</span>
+                        <span class="text-gray-500">Account Plan:</span>
+                        <span class="text-blue-400 font-bold">Growth Tier ($299/mo)</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-500">Allocated Seats:</span>
-                        <span class="text-gray-300">3 / 15 active</span>
+                        <span class="text-gray-300">3 / 10 active</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-500">Billing Anchor:</span>
@@ -75,14 +80,13 @@
             </div>
         </div>
 
-        <!-- Interactive Core, Metrics & Billing Ledger -->
+        <!-- Interactive Core & Ledger -->
         <div class="lg:col-span-2 space-y-6">
-            <!-- Simulated Face Metadata Display -->
             <div class="bg-gray-950 p-6 rounded-lg border border-gray-800 shadow-xl flex flex-col md:flex-row md:space-x-6 items-center justify-center min-h-64">
                 <div class="w-40 h-40 bg-gray-900 rounded-full border-2 border-gray-800 flex items-center justify-center relative mb-4 md:mb-0">
-                    <div id="avatarEyeLeft" class="w-4 h-4 bg-green-500 rounded-full absolute top-14 left-10 transition-all duration-75"></div>
-                    <div id="avatarEyeRight" class="w-4 h-4 bg-green-500 rounded-full absolute top-14 right-10 transition-all duration-75"></div>
-                    <div id="avatarMouth" class="w-12 h-2 bg-green-500 rounded-full absolute bottom-12 transition-all duration-100"></div>
+                    <div id="avatarEyeLeft" class="w-4 h-4 bg-green-500 rounded-full absolute top-14 left-10"></div>
+                    <div id="avatarEyeRight" class="w-4 h-4 bg-green-500 rounded-full absolute top-14 right-10"></div>
+                    <div id="avatarMouth" class="w-12 h-2 bg-green-500 rounded-full absolute bottom-12"></div>
                 </div>
                 <div class="flex-1 w-full space-y-3">
                     <div>
@@ -111,8 +115,7 @@
                 </div>
             </div>
 
-            <!-- WebSocket Event Logs Terminal -->
-            <div class="bg-gray-950 rounded-lg border border-gray-800 shadow-xl overflow-hidden flex flex-col h-48">
+            <div class="bg-gray-950 rounded-lg border border-gray-800 shadow-xl overflow-hidden flex flex-col h-44">
                 <div class="bg-gray-900 border-b border-gray-800 p-3 flex justify-between items-center">
                     <span class="text-xs font-mono tracking-wider text-gray-400">NETWORK PIPELINE MONITOR</span>
                     <button onclick="clearTerminal()" class="text-xs text-gray-500 hover:text-gray-400 underline font-mono">Clear</button>
@@ -122,12 +125,11 @@
                 </div>
             </div>
 
-            <!-- Live Billing History Ledger Panel with Secure Export Hook -->
             <div class="bg-gray-950 rounded-lg border border-gray-800 shadow-xl overflow-hidden">
                 <div class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center">
                     <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider font-mono">Metered Usage & Settlement Ledger</h3>
                     <button onclick="downloadLedger()" class="bg-gray-800 hover:bg-gray-700 text-green-400 border border-gray-700 text-xs font-mono font-bold px-3 py-1.5 rounded transition shadow flex items-center space-x-1">
-                        <span>⬇ Export CSV</span>
+                        <span>代理 Export CSV</span>
                     </button>
                 </div>
                 <div class="overflow-x-auto">
