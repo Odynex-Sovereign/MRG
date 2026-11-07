@@ -1,74 +1,110 @@
+"""Canonical application entrypoint for MRG."""
+
 from __future__ import annotations
 
-from functools import lru_cache
-from typing import Literal
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
-from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from mrg import __version__
+from mrg.config import Settings, get_settings
 
 
-class Settings(BaseSettings):
-    """Application settings loaded from environment and .env files."""
+async def run_sandbox_simulation(session, scenario_id: str):
+    """Default sandbox simulation event stream."""
+    yield {"type": "scenario_start", "scenario": scenario_id}
+    yield {
+        "type": "scenario_complete",
+        "metrics": {"composure_score": 80},
+        "debrief": "Scenario completed successfully.",
+    }
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-        case_sensitive=False,
+
+def create_app(settings: Settings | None = None) -> FastAPI:
+    settings = settings or get_settings()
+    app = FastAPI(
+        title=settings.app_name,
+        version=__version__,
+        description=(
+            "Planet-scale crisis simulation grid combining macro structural reasoning, "
+            "low-latency micro-conversational avatars, and sensory engines."
+        ),
+    )
+    app.state.settings = settings
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origin_list,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
-    app_name: str = "MRG — Integrated Simulation Suite"
-    environment: Literal["development", "staging", "production", "test"] = "development"
-    debug: bool = False
-    public_base_url: str = "http://localhost:8000"
-    port: int = 8000
-    secret_key: str = Field(
-        default="dev-secret-change-me",
-        min_length=16,
-    )
-    cors_origins: str = "http://localhost:8000,http://127.0.0.1:8000"
-    database_url: str | None = None
-    deepseek_api_key: str | None = None
-    nvidia_nim_api_key: str | None = None
-    stripe_secret_key: str | None = None
-    stripe_webhook_secret: str | None = None
-    stripe_publishable_key: str | None = None
-    admin_api_token: str | None = None
-    rate_limit_rpm: int = 120
-    enable_websocket_simulation: bool = True
-    enable_demo_checkout: bool = True
-    log_level: str = "INFO"
+    @app.get("/healthz")
+    async def healthz():
+        return {"status": "ok", "version": __version__}
 
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def _strip_cors(cls, value: str | None) -> str:
-        if value is None:
-            return ""
-        return value.strip()
+    @app.get("/readyz")
+    async def readyz():
+        return {"status": "ready", "version": __version__}
 
-    @property
-    def cors_origin_list(self) -> list[str]:
-        if not self.cors_origins or self.cors_origins.strip() == "*":
-            return ["*"]
-        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+    @app.get("/api/version")
+    async def api_version():
+        return {"version": __version__}
 
-    @property
-    def is_production(self) -> bool:
-        return self.environment == "production"
+    @app.get("/api/pricing")
+    async def api_pricing():
+        return {
+            "currency": "USD",
+            "plans": [
+                {"name": "Starter", "price": 0, "description": "Sandbox access"},
+                {"name": "Executive", "price": 49, "description": "Scenario library"},
+                {"name": "Enterprise", "price": 199, "description": "Team access"},
+            ],
+        }
 
-    @property
-    def has_database(self) -> bool:
-        return bool(self.database_url)
+    @app.post("/api/feedback")
+    async def api_feedback(payload: dict):
+        message = str(payload.get("message") or "Feedback submitted")
+        return {"status": "received", "message": message}
 
-    @property
-    def has_deepseek(self) -> bool:
-        return bool(self.deepseek_api_key)
+    @app.websocket("/ws/simulation")
+    async def websocket_simulation(websocket: WebSocket):
+        await websocket.accept()
+        await websocket.send_json({"type": "SYSTEM_STATUS"})
 
-    @property
-    def billing_configured(self) -> bool:
-        return bool(self.stripe_secret_key and self.stripe_secret_key.startswith(("sk_", "rk_")))
+        while True:
+            try:
+                payload = await websocket.receive_json()
+            except WebSocketDisconnect:
+                break
+            except ValueError:
+                continue
+
+            action = str(payload.get("action") or "").upper()
+            if action == "START":
+                scenario = str(payload.get("scenario") or "macro_shock")
+                async for event in run_sandbox_simulation(websocket, scenario):
+                    await websocket.send_json(event)
+                continue
+
+            if action == "TRIGGER_CRISIS":
+                prompt = str(payload.get("prompt") or "test incident")
+                await websocket.send_json(
+                    {"type": "MACRO_COGNITIVE_UPDATE", "message": f"Crisis trigger received: {prompt}", "prompt": prompt}
+                )
+                await websocket.send_json(
+                    {"type": "SENSORY_STREAM_INFO", "stream": "macro", "status": "active", "prompt": prompt}
+                )
+                continue
+
+            await websocket.send_json({"type": "SYSTEM_STATUS", "message": "Unsupported action"})
+
+    @app.exception_handler(Exception)
+    async def unhandled_exception(_request, exc: Exception):
+        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
+    return app
 
 
-@lru_cache(maxsize=1)
-def get_settings() -> Settings:
-    return Settings()
+app = create_app()

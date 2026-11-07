@@ -1,30 +1,22 @@
-# MRG — Integrated Simulation Suite
+# Runtime dependencies
+afastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+pydantic>=2.9.0
+pydantic-settings>=2.6.0
+python-dotenv>=1.0.0
+httpx>=0.27.0
+jinja2>=3.1.0
+email-validator>=2.2.0
+python-multipart>=0.0.12
+itsdangerous>=2.2.0
+sqlalchemy>=2.0.36
+stripe>=10.0.0
+redis>=5.0.1
+prometheus-client>=0.20.0
+PyJWT>=2.10.0
 
-**Practice composure and clear decisions when rare, high-impact events unfold.**
-
-MRG is a consumer-ready and institution-ready simulation product for individuals, teams, schools, nonprofits, municipalities, and enterprises.  
-It provides guided scenarios (including optional Black Swan-style challenges), a simple dashboard, transparent pricing, and a documented path to institutional licensing or perpetual buy-out.
-
-> **One sentence:** MRG helps you train for the day the plan breaks — safely, affordably, and without claiming to predict the future.
-
-## Quick start (local)
-
-```bash
-# Clone / extract
-cd MRG-main   # or your preferred directory name
-
-# Create virtual environment
-python3.11 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-
-# Install
-make install
-# or: pip install -r requirements.txt && pip install -e .[dev]
-
-# Configure
-cp .env.example .env
-# Edit .env — never commit real secrets
-
-# Run
-make run
-# or: PYTHONPATH=. uvicorn mrg.main:app --host 0.0.0.0 --port 8000 --reload
+# Development tools
+pytest>=8.3.0
+pytest-asyncio>=0.24.0
+ruff>=0.8.0
+black>=24.8.0
