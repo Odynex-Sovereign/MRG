@@ -45,3 +45,17 @@ volumes:
 networks:
   mrg_network:
     driver: bridge
+# Injected service block to run inside your active docker-compose layout
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prom_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - mrg_network
+
+# Add prom_data to your global volumes block:
+# volumes:
+#   prom_data:
