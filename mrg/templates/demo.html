@@ -3,35 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Telemetry Mesh — MRG Suite</title>
+    <title>Live Simulation Sandbox — MRG Grid</title>
     <link rel="stylesheet" href="/static/main.css">
-    <!-- Load Chart.js natively to handle canvas transformations -->
     <script src="https://jsdelivr.net"></script>
 </head>
 <body style="background-color: #0b0f19; padding: 2rem;">
     <main style="max-width: 1200px; margin: 0 auto;">
-        <header style="border-bottom: 1px solid #1f2937; padding-bottom: 1rem; margin-bottom: 2rem;">
-            <h1 style="color: #ffffff;">Operational Analytics Grid</h1>
-            <p style="color: #9ca3af;">High-frequency data visualization reflecting NASDAQ/Siemens data serialization pipelines.</p>
+        <header style="border-bottom: 1px solid #1f2937; padding-bottom: 1rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1 style="color: #ffffff; margin: 0;">Interactive Sandbox Environment</h1>
+                <p style="color: #9ca3af; margin: 0.5rem 0 0 0;">Live multi-agent system state validation loop (Active Mode: Sandbox Monitoring).</p>
+            </div>
+            <a href="/pricing" style="color: #38bdf8; text-decoration: none; font-weight: bold; padding: 0.5rem 1rem; border: 1px solid #38bdf8; border-radius: 0.375rem;">Upgrade Access Plan</a>
         </header>
 
         <div style="margin-bottom: 2rem;">
-            <button id="streamToggle" class="btn" style="width: auto; padding: 0.75rem 2rem; background: #10b981;">Initialize Analytics Stream</button>
+            <button id="streamToggle" class="btn" style="width: auto; padding: 0.75rem 2rem; background: #10b981;">Initialize Simulation Stream</button>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-            <!-- Vocal Stress Timeline Chart -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
             <div style="background: #111827; border: 1px solid #1f2937; padding: 1.5rem; border-radius: 0.5rem;">
                 <h3 style="color: #38bdf8; margin-top: 0;">Biometric Stress Core Tracker</h3>
                 <canvas id="stressChart" width="400" height="200"></canvas>
             </div>
 
-            <!-- Grid Stability Timeline Chart -->
             <div style="background: #111827; border: 1px solid #1f2937; padding: 1.5rem; border-radius: 0.5rem;">
                 <h3 style="color: #fbbf24; margin-top: 0;">Siemens Digital Twin Integrity</h3>
                 <canvas id="stabilityChart" width="400" height="200"></canvas>
             </div>
         </div>
+
+        <!-- In-Product Feedback Transmission Interface -->
+        <section style="background: #111827; border: 1px solid #1f2937; padding: 2rem; border-radius: 0.5rem;">
+            <h2 style="color: #ffffff; margin-top: 0;">Transmit Simulation Incident Report</h2>
+            <p style="color: #9ca3af;">Encountered unexpected behavior or boundary exceptions during the run? Submit an automated diagnostics ticket directly to the operations fleet matrix.</p>
+            <form id="feedbackForm" style="margin-top: 1.5rem;">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; color: #d1d5db; margin-bottom: 0.5rem;">Observation Logs / Incident Notes</label>
+                    <textarea id="feedbackText" required style="width: 100%; box-sizing: border-box; background: #1f2937; border: 1px solid #374151; border-radius: 0.375rem; padding: 0.75rem; color: #ffffff; font-family: inherit; min-height: 120px;" placeholder="Describe behavior variations, latency ticks, or engine stress markers..."></textarea>
+                </div>
+                <button type="submit" class="btn" style="width: auto; padding: 0.75rem 2rem;">Transmit Diagnostics</button>
+            </form>
+        </section>
     </main>
 
     <script>
@@ -39,7 +52,6 @@
         let isStreaming = false;
         const maxDataPoints = 20;
 
-        // Initialize empty baseline configurations for Chart.js
         const createChartConfig = (label, color) => ({
             type: 'line',
             data: { labels: [], datasets: [{ label: label, data: [], borderColor: color, tension: 0.2, fill: false }] },
@@ -52,17 +64,16 @@
         function appendChartData(chart, value) {
             const labels = chart.data.labels;
             const data = chart.data.datasets[0].data;
-
             if (labels.length >= maxDataPoints) { labels.shift(); data.shift(); }
             labels.push(new Date().toLocaleTimeString());
             data.push(value);
-            chart.update('none'); // Update optimized frame tracking
+            chart.update('none');
         }
 
         document.getElementById('streamToggle').addEventListener('click', () => {
             if (isStreaming) {
                 if (ws) ws.close();
-                document.getElementById('streamToggle').innerText = "Initialize Analytics Stream";
+                document.getElementById('streamToggle').innerText = "Initialize Simulation Stream";
                 document.getElementById('streamToggle').style.background = "#10b981";
                 isStreaming = false;
             } else {
@@ -77,13 +88,29 @@
 
                 ws.onclose = () => {
                     isStreaming = false;
-                    document.getElementById('streamToggle').innerText = "Initialize Analytics Stream";
+                    document.getElementById('streamToggle').innerText = "Initialize Simulation Stream";
                     document.getElementById('streamToggle').style.background = "#10b981";
                 };
 
                 document.getElementById('streamToggle').innerText = "Disconnect Active Stream";
                 document.getElementById('streamToggle').style.background = "#ef4444";
                 isStreaming = true;
+            }
+        });
+
+        document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = document.getElementById('feedbackText').value;
+            try {
+                const response = await fetch(`/api/alerts/trigger?severity=WARNING&message=${encodeURIComponent("Client Incident Ticket: " + text)}`, { method: 'POST' });
+                if (response.ok) {
+                    alert('Diagnostics transmitted successfully.');
+                    document.getElementById('feedbackText').value = '';
+                } else {
+                    alert('Transmission channel timed out.');
+                }
+            } catch (err) {
+                alert('Network communication boundary exception.');
             }
         });
     </script>
