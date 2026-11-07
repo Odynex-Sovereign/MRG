@@ -16,14 +16,14 @@ class Settings(BaseSettings):
     NVIDIA_RIVA_URL: str = Field(default="localhost:50051")
     AUDIO2FACE_URL: str = Field(default="localhost:50052")
     
-    # Live Financial Infrastructure Variables
     STRIPE_SECRET_KEY: str = Field(default="sk_test_placeholder")
+    STRIPE_WEBHOOK_SECRET: str = Field(default="whsec_placeholder")
     DOMAIN_URL: str = Field(default="https://fly.dev")
     
-    # Metered Consumption Pricing Rates (USD)
-    RATE_PER_MINUTE: float = 0.50          # $0.50 per simulation compute minute
-    RATE_PER_AUDIO_SEC: float = 0.02       # $0.02 per real-time voice synthesis second
-    RATE_PER_1K_TOKENS: float = 0.01       # $0.01 per 1,000 processed DeepSeek tokens
+    # Finalized Live Production Utility Rates
+    RATE_PER_MINUTE: float = 1.50          # $1.50 per simulation compute minute
+    RATE_PER_AUDIO_SEC: float = 0.04       # $0.04 per real-time voice synthesis second
+    RATE_PER_1K_TOKENS: float = 0.05       # $0.05 per 1,000 processed DeepSeek tokens
 
     @property
     def DATABASE_URL(self) -> str:
