@@ -32,3 +32,31 @@ def health_check():
 @app.get("/readyz")
 def readiness_check():
     return {"status": "ready"}
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from mrg.core.database import init_db
+from mrg.routers import webhooks, simulation
+import os
+
+app = FastAPI(title="MRG — High Stakes Integrated Simulation Grid")
+
+# Configure broad CORS policies for microservice access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.on_event("startup")
+def on_startup():
+    init_db()
+
+# Mount active production modules
+app.include_router(webhooks.router)
+app.include_router(simulation.router)
+
+@app.get("/healthz")
+def health_check():
+    return {"status": "ok", "version": "2.0.0"}
