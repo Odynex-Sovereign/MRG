@@ -1,5 +1,5 @@
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, Float
-from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, Float, ForeignKey
+from sqlalchemy.orm import declarative_base, relationship
 from datetime import datetime
 
 Base = declarative_base()
@@ -24,3 +24,15 @@ class DBMeteredUsage(Base):
     deepseek_tokens = Column(Integer)
     riva_audio_seconds = Column(Float)
     timestamp = Column(DateTime, default=datetime.utcnow)
+
+class DBUserSession(Base):
+    __tablename__ = "mrg_user_sessions"
+
+    session_token = Column(String, primary_key=True, index=True)
+    tenant_id = Column(String, index=True)
+    user_email = Column(String, index=True)
+    ip_address = Column(String, nullable=True)
+    user_agent = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)
+    is_revoked = Column(Boolean, default=False)
