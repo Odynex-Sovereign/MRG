@@ -55,7 +55,7 @@
                 </div>
             </div>
 
-            <!-- New Real-Time Subscription & Metering Status Module -->
+            <!-- Current Subscription Profile Module -->
             <div class="bg-gray-950 p-6 rounded-lg border border-gray-800 shadow-xl">
                 <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">3. Current Allocation Profile</h2>
                 <div class="p-3 bg-gray-900 rounded border border-gray-800 space-y-2 text-xs font-mono">
@@ -112,7 +112,7 @@
             </div>
 
             <!-- WebSocket Event Logs Terminal -->
-            <div class="bg-gray-950 rounded-lg border border-gray-800 shadow-xl overflow-hidden flex flex-col h-56">
+            <div class="bg-gray-950 rounded-lg border border-gray-800 shadow-xl overflow-hidden flex flex-col h-48">
                 <div class="bg-gray-900 border-b border-gray-800 p-3 flex justify-between items-center">
                     <span class="text-xs font-mono tracking-wider text-gray-400">NETWORK PIPELINE MONITOR</span>
                     <button onclick="clearTerminal()" class="text-xs text-gray-500 hover:text-gray-400 underline font-mono">Clear</button>
@@ -122,10 +122,13 @@
                 </div>
             </div>
 
-            <!-- New Live Billing History Ledger Panel -->
+            <!-- Live Billing History Ledger Panel with Secure Export Hook -->
             <div class="bg-gray-950 rounded-lg border border-gray-800 shadow-xl overflow-hidden">
-                <div class="bg-gray-900 border-b border-gray-800 p-4">
+                <div class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center">
                     <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider font-mono">Metered Usage & Settlement Ledger</h3>
+                    <button onclick="downloadLedger()" class="bg-gray-800 hover:bg-gray-700 text-green-400 border border-gray-700 text-xs font-mono font-bold px-3 py-1.5 rounded transition shadow flex items-center space-x-1">
+                        <span>⬇ Export CSV</span>
+                    </button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs font-mono">
@@ -140,132 +143,4 @@
                             </tr>
                         </thead>
                         <tbody id="billingLedgerBody" class="divide-y divide-gray-800 text-gray-300">
-                            <!-- Injected entries drop in here automatically -->
                             <tr id="emptyLedgerRow">
-                                <td colspan="6" class="p-4 text-center text-gray-600 italic">No metered transactions recorded in this active window.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <script>
-        let ws = null;
-        let selectedPersona = 'corporate';
-      let sessionStartTime = null;
-const personaData = {
-corporate: { name: 'Victoria Vance', color: 'border-green-600 text-green-400 bg-green-950' },
-political: { name: 'Marcus Brody', color: 'border-blue-600 text-blue-400 bg-blue-950' },
-manufacturing: { name: 'Dieter Brand', color: 'border-yellow-600 text-yellow-400 bg-yellow-950' }
-};
-function selectPersona(id) {
-if (ws && ws.readyState === WebSocket.OPEN) return alert("Cannot change profile during active simulation.");
-selectedPersona = id;
-['corporate', 'political', 'manufacturing'].forEach(p => {
-const el = document.getElementById(btn-${p});
-el.className = "w-full text-left p-3 rounded border border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-700 transition";
-});
-document.getElementById(btn-${id}).className = w-full text-left p-3 rounded border ${personaData[id].color} bg-opacity-20 transition;
-document.getElementById('activePersonaName').innerText = personaData[id].name;
-logTerminal([system] Active vertical targeting swapped to: ${personaData[id].name});
-}
-function toggleConnection() {
-const btn = document.getElementById('connectBtn');
-const badge = document.getElementById('statusBadge');
-if (ws && ws.readyState === WebSocket.OPEN) {
-ws.close();
-return;
-}
-const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-const wsUrl = ${protocol}${window.location.host}/ws/simulation;
-logTerminal([pipeline] Attempting frame handshake with ${wsUrl}...);
-ws = new WebSocket(wsUrl);
-sessionStartTime = Date.now();
-ws.onopen = () => {
-btn.innerText = "Terminate Simulation Loop";
-btn.className = "w-full bg-red-600 hover:bg-red-500 text-white font-semibold p-3 rounded transition shadow-md";
-badge.innerText = "STATUS: ACTIVE LINK";
-badge.className = "text-center text-xs font-mono text-green-400 py-1 bg-green-950 bg-opacity-20 rounded border border-green-800";
-logTerminal("[pipeline] Core loop initialized. Processing container constraints.");
-};
-ws.onwebsocketevent = (event) => {}; // legacy fallback tracker
-ws.onmessage = (event) => {
-const data = JSON.parse(event.data);
-logTerminal([stream-recv] Frame event parsed: ${JSON.stringify(data)});
-if (data.type === "scenario_start") {
-document.getElementById('composureBar').style.width = "100%";
-document.getElementById('composureVal').innerText = "100%";
-animateMouth(false);
-} else if (data.type === "scenario_complete") {
-const score = data.metrics.composure_score;
-document.getElementById('composureBar').style.width = ${score}%;
-document.getElementById('composureVal').innerText = ${score}%;
-document.getElementById('vocalCalmText').innerText = "Strained";
-document.getElementById('vocalCalmText').className = "text-red-400 font-bold";
-document.getElementById('expressionText').innerText = "Micro-Sneer";
-document.getElementById('expressionText').className = "text-yellow-400 font-bold";
-animateMouth(true);
-}
-};
-ws.onclose = () => {
-btn.innerText = "Initialize Simulation Loop";
-btn.className = "w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold p-3 rounded transition shadow-md";
-badge.innerText = "STATUS: DISCONNECTED";
-badge.className = "text-center text-xs font-mono text-gray-500 py-1 bg-gray-900 rounded border border-gray-800";
-logTerminal("[pipeline] WebSocket channel detached cleanly.");
-// On socket closure, parse runtime durations and inject directly into visual ledger
-appendBillingRecord();
-resetDisplay();
-};
-}
-function appendBillingRecord() {
-if (!sessionStartTime) return;
-const durationSec = ((Date.now() - sessionStartTime) / 1000).toFixed(2);
-const durationMin = (durationSec / 60).toFixed(4);
-const tokens = Math.floor(durationSec * 15);
-const generatedId = "sim_" + Math.random().toString(36).substr(2, 9);
-const emptyRow = document.getElementById('emptyLedgerRow');
-if (emptyRow) emptyRow.remove();
-const tbody = document.getElementById('billingLedgerBody');
-const row = document.createElement('tr');
-row.className = "hover:bg-gray-900 border-b border-gray-800 transition";
-row.innerHTML = `
-${generatedId}
-${personaData[selectedPersona].name}
-\({durationMin}m (\){durationSec}s)
-${tokens}
-${durationSec}s
-Settled
-`;
-tbody.insertBefore(row, tbody.firstChild);
-}
-function logTerminal(msg) {
-const container = document.getElementById('terminalStream');
-const log = document.createElement('div');
-log.innerText = > ${msg};
-container.appendChild(log);
-container.scrollTop = container.scrollHeight;
-}
-function clearTerminal() {
-document.getElementById('terminalStream').innerHTML = '';
-}
-function animateMouth(isStressed) {
-const mouth = document.getElementById('avatarMouth');
-if (isStressed) {
-mouth.className = "w-12 h-4 bg-red-500 rounded-md absolute bottom-12 transition-all duration-100";
-} else {
-mouth.className = "w-12 h-2 bg-green-500 rounded-full absolute bottom-12 transition-all duration-100";
-}
-}
-function resetDisplay() {
-document.getElementById('composureBar').style.width = "0%";
-document.getElementById('composureVal').innerText = "--%";
-document.getElementById('vocalCalmText').innerText = "Stable";
-document.getElementById('vocalCalmText').className = "text-gray-300 font-bold";
-document.getElementById('expressionText').innerText = "Neutral";
-document.getElementById('expressionText').className = "text-gray-300 font-bold";
-animateMouth(false);
-sessionStartTime = null;
-}
