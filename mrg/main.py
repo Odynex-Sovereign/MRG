@@ -44,3 +44,42 @@ async def target_checkout_session(user_id: str, plan_tier: str, email: str = Non
 @app.get("/healthz")
 def health_check():
     return {"status": "ok", "version": "2.0.0"}
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
+from fastapi import Request
+from mrg.core.config import settings
+from mrg.core.database import init_db
+from mrg.routers import webhooks, simulation, auth
+
+app = FastAPI(title="MRG Grid Operating System Matrix")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.mount("/static", StaticFiles(directory="mrg/static"), name="static")
+templates = Jinja2Templates(directory="mrg/templates")
+
+@app.on_event("startup")
+def on_startup():
+    init_db()
+
+# Mount all unified operational endpoint domains
+app.include_router(webhooks.router)
+app.include_router(simulation.router)
+app.include_router(auth.router)
+
+@app.get("/pricing", response_class=HTMLResponse)
+def get_pricing_page(request: Request):
+    return templates.TemplateResponse("pricing.html", {"request": request})
+
+@app.get("/healthz")
+def health_check():
+    return {"status": "ok", "version": "2.0.0"}
