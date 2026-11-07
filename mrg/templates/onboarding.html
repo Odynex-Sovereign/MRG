@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guided Activation Wizard — MRG System</title>
+    <link rel="stylesheet" href="/static/main.css">
+</head>
+<body style="background-color: #0b0f19; color: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; box-sizing: border-box;">
+    <div style="max-width: 650px; width: 100%; background: #111827; border: 1px solid #1f2937; border-radius: 0.75rem; padding: 2.5rem; box-sizing: border-box;">
+        <header style="border-bottom: 1px solid #1f2937; padding-bottom: 1rem; margin-bottom: 2rem;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 1.75rem;">Platform Activation Wizard</h1>
+            <p style="color: #9ca3af; margin: 0.5rem 0 0 0;">Establish runtime environment bounds and assign profile security context tokens.</p>
+        </header>
+
+        <main>
+            <div id="step1">
+                <h3>Step 1: Security Passphrase Generation</h3>
+                <p style="line-height: 1.6; color: #d1d5db;">Configure a secure localized workspace label profile identifier below to authorize asymmetric key validation loops across the real-time pipeline hubs.</p>
+                <div style="margin: 1.5rem 0;">
+                    <label style="display: block; color: #9ca3af; margin-bottom: 0.5rem;">Target Operating Identifier Label</label>
+                    <input type="text" id="usernameInput" value="prod_operator_01" style="width: 100%; background: #1f2937; border: 1px solid #374151; border-radius: 0.375rem; padding: 0.75rem; color: #ffffff; font-size: 1rem; box-sizing: border-box;">
+                </div>
+                <button id="nextBtn" class="btn" style="width: auto; padding: 0.75rem 2.5rem;">Generate Token Parameters</button>
+            </div>
+
+            <div id="step2" style="display: none;">
+                <h3 style="color: #10b981;">Step 2: Workspace Activation Confirmed</h3>
+                <p style="line-height: 1.6; color: #d1d5db;">Your security context access keys have been structured and cached into memory space. The interface is ready to process system digital-twin variables.</p>
+                
+                <div style="background: #1f2937; border-left: 4px solid #10b981; padding: 1rem; border-radius: 0.25rem; margin: 1.5rem 0;">
+                    <code id="tokenDisplay" style="color: #34d399; font-family: monospace; word-break: break-all; font-size: 0.9rem;">Generating bearer mapping...</code>
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <a href="/demo" class="btn" style="text-decoration: none; text-align: center; display: inline-block;">Enter Sandbox Deck</a>
+                    <a href="/" style="color: #9ca3af; text-decoration: none; padding: 0.75rem 1rem; display: flex; align-items: center;">Return to Base</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('nextBtn').addEventListener('click', async () => {
+            const username = document.getElementById('usernameInput').value;
+            if (!username) return alert('Identity handle configuration required.');
+
+            try {
+                // Initialize request tracking parameters directly against authorization layers
+                const response = await fetch('/api/auth/token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ 'username': username, 'password': 'sandbox_bypass_passphrase' })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('tokenDisplay').innerText = `Bearer ${data.access_token}`;
+                    document.getElementById('step1').style.display = 'none';
+                    document.getElementById('step2').style.display = 'block';
+                } else {
+                    alert('Token provisioning protocol timeout exception.');
+                }
+            } catch (err) {
+                alert('Authentication backend layer communication failure.');
+            }
+        });
+    </script>
+</body>
+</html>
