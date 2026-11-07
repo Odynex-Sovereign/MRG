@@ -1,21 +1,38 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
+from fastapi import Request
+from mrg.core.config import settings
 from mrg.core.database import init_db
-from mrg.routers import webhooks
+from mrg.routers import webhooks, simulation
 from mrg.core.billing import create_production_checkout
-import os
 
-app = FastAPI(title="MRG — Production Simulation Suite Grid")
+app = FastAPI(title="MRG Grid Operating System")
 
-# Initialize database connections on startup
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.mount("/static", StaticFiles(directory="mrg/static"), name="static")
+templates = Jinja2Templates(directory="mrg/templates")
+
 @app.on_event("startup")
 def on_startup():
     init_db()
 
-# Mount the live Webhook listener
 app.include_router(webhooks.router)
+app.include_router(simulation.router)
 
-# Live Checkout Redirect Link Generator Route
+@app.get("/pricing", response_class=HTMLResponse)
+def get_pricing_page(request: Request):
+    return templates.TemplateResponse("pricing.html", {"request": request})
+
 @app.post("/api/billing/checkout")
 async def target_checkout_session(user_id: str, plan_tier: str, email: str = None):
     try:
@@ -23,39 +40,6 @@ async def target_checkout_session(user_id: str, plan_tier: str, email: str = Non
         return {"url": checkout_url}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-# Existing basic health indicators from the repository architecture
-@app.get("/healthz")
-def health_check():
-    return {"status": "ok", "version": "2.0.0", "mode": "production"}
-
-@app.get("/readyz")
-def readiness_check():
-    return {"status": "ready"}
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from mrg.core.database import init_db
-from mrg.routers import webhooks, simulation
-import os
-
-app = FastAPI(title="MRG — High Stakes Integrated Simulation Grid")
-
-# Configure broad CORS policies for microservice access
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-@app.on_event("startup")
-def on_startup():
-    init_db()
-
-# Mount active production modules
-app.include_router(webhooks.router)
-app.include_router(simulation.router)
 
 @app.get("/healthz")
 def health_check():
