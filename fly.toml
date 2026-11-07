@@ -1,35 +1,17 @@
 app = "mrg"
 primary_region = "iad"
-
 [build]
   dockerfile = "Dockerfile"
-
 [env]
   ENVIRONMENT = "production"
   PORT = "8000"
-  REDIS_URL = "redis://localhost:6379/0"
-
-[[mounts]]
-  source = "mrg_storage"
-  destination = "/data"
-
 [[services]]
   protocol = "tcp"
   internal_port = 8000
   processes = ["app"]
-
   [[services.ports]]
     port = 80
     handlers = ["http"]
-
   [[services.ports]]
     port = 443
     handlers = ["tls", "http"]
-
-  [[services.http_checks]]
-    interval = "10s"
-    grace_period = "5s"
-    method = "get"
-    path = "/healthz"
-    protocol = "http"
-    timeout= "2s"
